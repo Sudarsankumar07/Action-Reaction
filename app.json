@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Action Reaction",
+    "slug": "action-reaction",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#6366f1"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.actionreaction.app"
+    },
+    "android": {
+      "package": "com.actionreaction.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Allow Action Reaction to access device motion for gameplay detection."
+        }
+      ]
+    ]
+  }
+}
