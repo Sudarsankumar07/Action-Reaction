@@ -6,6 +6,7 @@ import {
   StatusBar,
   Animated,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,9 @@ export default function ScoreboardScreen({ route, navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
 
   useEffect(() => {
     Animated.parallel([
@@ -40,10 +44,14 @@ export default function ScoreboardScreen({ route, navigation }) {
         tension: 40,
         useNativeDriver: true,
       }),
+      Animated.timing(progressAnim, {
+        toValue: accuracy,
+        duration: 1000,
+        delay: 500,
+        useNativeDriver: false, // width animation needs false
+      }),
     ]).start();
-  }, []);
-
-  const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
+  }, [accuracy]);
 
   const getMessage = () => {
     if (accuracy >= 80) return '🔥 Amazing!';
@@ -56,24 +64,26 @@ export default function ScoreboardScreen({ route, navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={config.gradient} style={styles.gradient}>
-        {/* Header */}
-        <Animated.View 
-          style={[
-            styles.header,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.iconContainer}>
-            <Ionicons name="trophy" size={64} color={colors.white} />
-          </View>
-          <Text style={styles.title}>Round Complete!</Text>
-          <Text style={styles.subtitle}>{getMessage()}</Text>
-        </Animated.View>
-
-        {/* Stats Card */}
+          {/* Header */}
+          <Animated.View 
+            style={[
+              styles.header,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.iconContainer}>
+              <Ionicons name="trophy" size={64} color={colors.white} />
+            </View>
+            <Text style={styles.title}>Round Complete!</Text>
+            <Text style={styles.subtitle}>{getMessage()}</Text>
+          </Animated.View>        {/* Stats Card */}
         <Animated.View
           style={[
             styles.statsCard,
@@ -125,9 +135,9 @@ export default function ScoreboardScreen({ route, navigation }) {
                 style={[
                   styles.progressBar,
                   {
-                    width: fadeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0%', `${accuracy}%`],
+                    width: progressAnim.interpolate({
+                      inputRange: [0, 100],
+                      outputRange: ['0%', '100%'],
                     }),
                   },
                 ]}
@@ -170,6 +180,7 @@ export default function ScoreboardScreen({ route, navigation }) {
             icon={<Ionicons name="settings-outline" size={20} color={colors.white} />}
           />
         </Animated.View>
+        </ScrollView>
       </LinearGradient>
     </View>
   );
@@ -182,6 +193,10 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
     paddingTop: StatusBar.currentHeight || spacing.xl,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: spacing.xl,
   },
   header: {
     alignItems: 'center',
