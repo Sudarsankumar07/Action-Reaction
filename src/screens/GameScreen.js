@@ -133,31 +133,40 @@ export default function GameScreen({ route, navigation }) {
   };
 
   const loadNextWord = () => {
-    const word = getRandomWord(topic, usedWords);
-    if (word) {
-      setCurrentWord(word);
-      setUsedWords([...usedWords, word]);
-      
-      // Animate word appearance
-      scaleAnim.setValue(0.8);
-      fadeAnim.setValue(0);
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 8,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // No more words
-      endGame();
-    }
+    setUsedWords(prevUsedWords => {
+      console.log('Used words count:', prevUsedWords.length, 'Words:', prevUsedWords);
+      const word = getRandomWord(topic, prevUsedWords);
+      if (word) {
+        console.log('Next word:', word);
+        setCurrentWord(word);
+        
+        // Animate word appearance
+        scaleAnim.setValue(0.8);
+        fadeAnim.setValue(0);
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            friction: 8,
+            tension: 40,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        
+        const newUsedWords = [...prevUsedWords, word];
+        console.log('Updated used words:', newUsedWords.length);
+        return newUsedWords; // Add word to used list
+      } else {
+        // No more words
+        console.log('No more words available! Ending game.');
+        endGame();
+        return prevUsedWords;
+      }
+    });
   };
 
   const handleCorrect = () => {
