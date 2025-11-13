@@ -30,6 +30,11 @@
           "motionPermission": "Allow Action Reaction to access device motion for gameplay detection."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bf76b5da-f86b-4071-99a4-2391d4357d6c"
+      }
+    }
   }
 }
