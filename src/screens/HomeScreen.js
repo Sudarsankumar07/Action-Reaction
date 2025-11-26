@@ -7,6 +7,7 @@ import {
   StatusBar,
   Animated,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ const { width, height } = Dimensions.get('window');
 export default function HomeScreen({ navigation }) {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
+  const [selectedMode, setSelectedMode] = useState('multiplayer'); // 'multiplayer' or 'singleplayer'
 
   useEffect(() => {
     Animated.parallel([
@@ -36,10 +38,42 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   const handleTopicSelect = (topic) => {
-    navigation.navigate('Game', { topic });
+    navigation.navigate('Game', { topic, mode: selectedMode });
   };
 
   const topics = getAllTopics();
+
+  // Single player game modes
+  const singlePlayerModes = [
+    {
+      id: 'ai-hints',
+      name: 'AI Hint System',
+      description: 'Play solo with progressive hints',
+      icon: 'bulb-outline',
+      gradient: ['#6366f1', '#8b5cf6'],
+    },
+    {
+      id: 'time-attack',
+      name: 'Time Attack',
+      description: 'Speed challenge with scrambled words',
+      icon: 'flash-outline',
+      gradient: ['#f59e0b', '#f97316'],
+    },
+    {
+      id: 'memory',
+      name: 'Memory Challenge',
+      description: 'Test your recall abilities',
+      icon: 'fitness-outline',
+      gradient: ['#8b5cf6', '#7c3aed'],
+    },
+    {
+      id: 'practice',
+      name: 'Practice Mode',
+      description: 'Learn new words without pressure',
+      icon: 'book-outline',
+      gradient: ['#10b981', '#059669'],
+    },
+  ];
 
   return (
     <View style={styles.container}>
@@ -93,10 +127,59 @@ export default function HomeScreen({ navigation }) {
             }
           ]}
         >
+          {/* Mode Selection Tabs */}
+          <View style={styles.modeTabsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.modeTab,
+                selectedMode === 'multiplayer' && styles.modeTabActive,
+              ]}
+              onPress={() => setSelectedMode('multiplayer')}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name="people" 
+                size={20} 
+                color={selectedMode === 'multiplayer' ? colors.white : colors.gray600} 
+              />
+              <Text style={[
+                styles.modeTabText,
+                selectedMode === 'multiplayer' && styles.modeTabTextActive,
+              ]}>
+                Multiplayer
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.modeTab,
+                selectedMode === 'singleplayer' && styles.modeTabActive,
+              ]}
+              onPress={() => setSelectedMode('singleplayer')}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name="person" 
+                size={20} 
+                color={selectedMode === 'singleplayer' ? colors.white : colors.gray600} 
+              />
+              <Text style={[
+                styles.modeTabText,
+                selectedMode === 'singleplayer' && styles.modeTabTextActive,
+              ]}>
+                Single Player
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.topicsHeader}>
-            <Text style={styles.sectionTitle}>Choose Your Topic</Text>
+            <Text style={styles.sectionTitle}>
+              {selectedMode === 'multiplayer' ? 'Choose Your Topic' : 'Choose Game Mode'}
+            </Text>
             <Text style={styles.sectionSubtitle}>
-              Select a category to start the fun!
+              {selectedMode === 'multiplayer' 
+                ? 'Select a category to start the fun!' 
+                : 'Pick a single-player challenge!'}
             </Text>
           </View>
 
@@ -105,31 +188,80 @@ export default function HomeScreen({ navigation }) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.topicsContent}
           >
-            {topics.map((topic, index) => (
-              <Animated.View
-                key={topic}
-                style={{
-                  opacity: fadeAnim,
-                  transform: [{
-                    translateX: Animated.multiply(slideAnim, new Animated.Value(index % 2 === 0 ? -1 : 1))
-                  }]
-                }}
-              >
-                <TopicCard
-                  topic={topic}
-                  topicConfig={topicConfig[topic]}
-                  onPress={() => handleTopicSelect(topic)}
-                  style={styles.topicCard}
-                />
-              </Animated.View>
-            ))}
+            {selectedMode === 'multiplayer' ? (
+              // Multiplayer Topics
+              <>
+                {topics.map((topic, index) => (
+                  <Animated.View
+                    key={topic}
+                    style={{
+                      opacity: fadeAnim,
+                      transform: [{
+                        translateX: Animated.multiply(slideAnim, new Animated.Value(index % 2 === 0 ? -1 : 1))
+                      }]
+                    }}
+                  >
+                    <TopicCard
+                      topic={topic}
+                      topicConfig={topicConfig[topic]}
+                      onPress={() => handleTopicSelect(topic)}
+                      style={styles.topicCard}
+                    />
+                  </Animated.View>
+                ))}
 
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                🎮 {topics.reduce((sum, topic) => sum + getWordCount(topic), 0)}+ words across {topics.length} categories
-              </Text>
-            </View>
+                {/* Footer */}
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>
+                    🎮 {topics.reduce((sum, topic) => sum + getWordCount(topic), 0)}+ words across {topics.length} categories
+                  </Text>
+                </View>
+              </>
+            ) : (
+              // Single Player Modes
+              <>
+                {singlePlayerModes.map((mode, index) => (
+                  <Animated.View
+                    key={mode.id}
+                    style={{
+                      opacity: fadeAnim,
+                      transform: [{
+                        translateX: Animated.multiply(slideAnim, new Animated.Value(index % 2 === 0 ? -1 : 1))
+                      }]
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={styles.singlePlayerCard}
+                      onPress={() => navigation.navigate('Game', { mode: mode.id, topic: 'general' })}
+                      activeOpacity={0.8}
+                    >
+                      <LinearGradient
+                        colors={mode.gradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.singlePlayerCardGradient}
+                      >
+                        <View style={styles.singlePlayerCardIcon}>
+                          <Ionicons name={mode.icon} size={32} color={colors.white} />
+                        </View>
+                        <View style={styles.singlePlayerCardContent}>
+                          <Text style={styles.singlePlayerCardTitle}>{mode.name}</Text>
+                          <Text style={styles.singlePlayerCardDescription}>{mode.description}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </Animated.View>
+                ))}
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>
+                    🎯 {singlePlayerModes.length} single-player modes available
+                  </Text>
+                </View>
+              </>
+            )}
           </ScrollView>
         </Animated.View>
       </LinearGradient>
@@ -189,7 +321,38 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopLeftRadius: borderRadius.xxl,
     borderTopRightRadius: borderRadius.xxl,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.md,
+  },
+  modeTabsContainer: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
+    backgroundColor: colors.gray100,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xs,
+  },
+  modeTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+    gap: spacing.xs,
+  },
+  modeTabActive: {
+    backgroundColor: colors.primary,
+    ...shadows.sm,
+  },
+  modeTabText: {
+    fontSize: typography.fontSizeSm,
+    fontWeight: typography.fontWeightSemibold,
+    color: colors.gray600,
+  },
+  modeTabTextActive: {
+    color: colors.white,
   },
   topicsHeader: {
     paddingHorizontal: spacing.lg,
@@ -224,5 +387,39 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeSm,
     color: colors.gray500,
     textAlign: 'center',
+  },
+  singlePlayerCard: {
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    ...shadows.lg,
+  },
+  singlePlayerCardGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  singlePlayerCardIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  singlePlayerCardContent: {
+    flex: 1,
+  },
+  singlePlayerCardTitle: {
+    fontSize: typography.fontSizeLg,
+    fontWeight: typography.fontWeightBold,
+    color: colors.white,
+    marginBottom: spacing.xs,
+  },
+  singlePlayerCardDescription: {
+    fontSize: typography.fontSizeSm,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 18,
   },
 });
