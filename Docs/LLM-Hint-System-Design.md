@@ -71,7 +71,7 @@ This document outlines the design for integrating **Groq API** (LLM-powered micr
                   ▼
 ┌─────────────────────────────────────────────────────────┐
 │              Groq API (LLM Provider)                     │
-│  - Model: llama-3.1-70b-versatile                       │
+│  - Model: openai/gpt-oss-20b                       │
 │  - Fast inference                                        │
 │  - Free tier available                                   │
 └─────────────────────────────────────────────────────────┘
@@ -136,7 +136,7 @@ Authorization: Bearer <APP_SECRET_KEY>
     }
   ],
   "metadata": {
-    "model": "llama-3.1-70b-versatile",
+    "model": "openai/gpt-oss-20b",
     "tokensUsed": 156,
     "cached": false,
     "generationTime": 1200
@@ -799,4 +799,4 @@ This LLM-powered AI Hint System design provides:
 
 *Document Version: 1.0*  
 *Created: November 27, 2025*  
-*Author: Design Team*
+*Author: Sudarsan*

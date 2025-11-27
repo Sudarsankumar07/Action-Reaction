@@ -28,6 +28,7 @@ import {
   emojiHints, 
   calculateScore 
 } from '../data/hints';
+import hintService from '../services/hintService';
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -58,6 +59,7 @@ export default function GameScreen({ route, navigation }) {
   const [memoryIndex, setMemoryIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
+  const [loadingHints, setLoadingHints] = useState(false);
 
   // Use refs to track current scores for navigation
   const scoreRef = useRef(0);
@@ -205,8 +207,8 @@ export default function GameScreen({ route, navigation }) {
     showNextWord(0);
   };
 
-  const loadNextWord = () => {
-    setUsedWords(prevUsedWords => {
+  const loadNextWord = async () => {
+    setUsedWords(async prevUsedWords => {
       console.log('Used words count:', prevUsedWords.length, 'Words:', prevUsedWords);
       const word = getRandomWord(topic, prevUsedWords);
       if (word) {
@@ -219,8 +221,19 @@ export default function GameScreen({ route, navigation }) {
         
         // Setup based on mode
         if (mode === 'ai-hints') {
-          const hints = generateHints(word, topic);
-          setCurrentHints(hints);
+          setLoadingHints(true);
+          try {
+            const hints = await hintService.getHints(word, topic);
+            setCurrentHints(hints);
+            console.log('Loaded AI hints:', hints);
+          } catch (error) {
+            console.error('Error loading hints:', error);
+            // Fallback to static hints
+            const fallbackHints = generateHints(word, topic);
+            setCurrentHints(fallbackHints);
+          } finally {
+            setLoadingHints(false);
+          }
         } else if (mode === 'time-attack') {
           const randomMode = Math.random();
           if (randomMode < 0.33) {
@@ -578,7 +591,11 @@ export default function GameScreen({ route, navigation }) {
               <Text style={styles.modeLabel}>Use the hints to guess the word!</Text>
               
               {/* AI Hints Display */}
-              {hintsShown > 0 && (
+              {loadingHints ? (
+                <View style={styles.hintsContainer}>
+                  <Text style={styles.hintTimer}>Loading AI hints...</Text>
+                </View>
+              ) : hintsShown > 0 ? (
                 <View style={styles.hintsContainer}>
                   {currentHints.slice(0, hintsShown).map((hint, index) => (
                     <View key={index} style={styles.hintItem}>
@@ -589,6 +606,10 @@ export default function GameScreen({ route, navigation }) {
                   {hintsShown < 4 && (
                     <Text style={styles.hintTimer}>Next hint coming soon...</Text>
                   )}
+                </View>
+              ) : (
+                <View style={styles.hintsContainer}>
+                  <Text style={styles.hintTimer}>First hint coming in 3 seconds...</Text>
                 </View>
               )}
             </View>
