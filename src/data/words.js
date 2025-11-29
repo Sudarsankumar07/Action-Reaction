@@ -74,7 +74,7 @@ export const wordDatabase = {
     'Shopping', 'Cooking', 'Baking', 'Reading', 'Writing', 'Drawing',
     'Painting', 'Photography', 'Gardening', 'Hiking', 'Jogging', 'Meditation',
     'Sleep', 'Dreaming', 'Laughing', 'Crying', 'Singing', 'Dancing',
-    'Clapping', 'Waving', 'Hugging', 'Kissing', 'Handshake', 'High Five',
+    'Clapping', 'Waving', 'Hugging', 'Handshake', 'High Five',
     'Selfie', 'Video Call', 'Texting', 'Email', 'Internet', 'Computer',
     'Phone', 'Tablet', 'Television', 'Camera', 'Watch', 'Glasses',
     'Umbrella', 'Backpack', 'Wallet', 'Keys', 'Money', 'Credit Card',

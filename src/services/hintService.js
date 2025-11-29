@@ -22,7 +22,8 @@ class HintService {
     }
 
     try {
-      // 1. Check cache first
+      
+      // 1. Check cache first (will be empty now due to clearCache above)
       const cachedHints = await this.getCachedHints(word, topic);
       if (cachedHints) {
         console.log('Using cached AI hints for:', word);

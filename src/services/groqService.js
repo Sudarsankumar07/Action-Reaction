@@ -5,8 +5,8 @@ class GroqService {
   constructor() {
     this.apiKey = GROQ_API_KEY;
     this.baseUrl = GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
-    this.model = 'openai/gpt-oss-20b';
-    this.maxTokens = 500;
+    this.model = 'llama-3.3-70b-versatile'; // Updated to latest supported model
+    this.maxTokens = 200; // Reduced - we only need 4 short hints
     this.temperature = 0.7;
   }
 
@@ -20,6 +20,8 @@ class GroqService {
   async generateHints(word, topic, difficulty = 'medium') {
     try {
       const prompt = this.buildPrompt(word, topic, difficulty);
+      
+      console.log('Calling Groq API for word:', word);
       
       const response = await axios.post(
         `${this.baseUrl}/chat/completions`,
@@ -47,6 +49,9 @@ class GroqService {
         }
       );
 
+      console.log('Groq API Response Status:', response.status);
+      console.log('Groq API Response Data:', JSON.stringify(response.data, null, 2));
+      
       const content = response.data.choices[0].message.content;
       console.log('Raw LLM Response:', content);
       
@@ -61,6 +66,9 @@ class GroqService {
       }
     } catch (error) {
       console.error('Groq API Error:', error.message);
+      if (error.response) {
+        console.error('API Response Error:', error.response.data);
+      }
       return this.generateFallbackHints(word, topic);
     }
   }
@@ -69,34 +77,27 @@ class GroqService {
    * Build the prompt for hint generation
    */
   buildPrompt(word, topic, difficulty) {
-    const difficultyInstructions = {
-      easy: 'Make hints very obvious and straightforward',
-      medium: 'Balance between challenging and helpful',
-      hard: 'Make hints cryptic and require creative thinking'
-    };
+    return `Generate exactly 4 hints for the word "${word}" from category "${topic}".
 
-    return `Generate exactly 4 progressive hints for the word "${word}" from the category "${topic}".
-
-REQUIREMENTS:
-1. Hint 1: General category or origin clue (vague)
-2. Hint 2: Include letter count and basic characteristics
-3. Hint 3: First letter + detailed description
-4. Hint 4: Partial word reveal with underscores (e.g., "P _ Z Z A")
+DIFFICULTY LEVELS:
+1. HARD: Indirect but relatable (what it's used for, where found) - MAX 10 WORDS
+2. MODERATE: Clear category, main characteristics - MAX 10 WORDS  
+3. EASY: First letter + length + specific details - MAX 10 WORDS
+4. VERY EASY: Partial letters (e.g. "P_ZZ_") + obvious clue - MAX 10 WORDS
 
 RULES:
-- Never use the word "${word}" itself in hints
-- Each hint should progressively make it easier to guess
-- Use simple, clear language
-- Keep each hint under 15 words
-- ${difficultyInstructions[difficulty]}
+- Never use the word "${word}"
+- Each hint under 10 words
+- Number each hint (1. 2. 3. 4.)
+- Make it relatable and fun to guess
 
-OUTPUT FORMAT (one hint per line):
-1. [first hint text]
-2. [second hint text]
-3. [third hint text]
-4. [fourth hint text with blanks]
+EXAMPLE for "Pizza":
+1. Italian dish often shared at parties and gatherings
+2. Popular round ${topic} with cheese and tomato base
+3. Starts with P, 5 letters, sliced Italian bread
+4. P_ZZ_, delivered in boxes
 
-Generate the hints now:`;
+Now generate 4 hints for "${word}":`;
   }
 
   /**
@@ -105,88 +106,131 @@ Generate the hints now:`;
   parseHints(content) {
     const hints = [];
     
-    // Method 1: Try to extract numbered hints (1. 2. 3. 4.)
-    const lines = content.split('\n');
+    console.log('=== PARSING LLM RESPONSE ===');
+    console.log('Raw content:', content);
+    console.log('Content length:', content.length);
     
-    for (let line of lines) {
-      line = line.trim();
+    // Split by lines and clean up
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    console.log('Total lines:', lines.length);
+    console.log('Lines:', JSON.stringify(lines, null, 2));
+    
+    // Try different patterns to extract hints
+    for (let i = 0; i < lines.length && hints.length < 4; i++) {
+      const line = lines[i];
       
-      // Match patterns like "1. hint text" or "1) hint text" or "1: hint text"
-      const numberedMatch = line.match(/^(\d+)[\.\):\s]+(.+)$/);
-      if (numberedMatch) {
-        const hintText = numberedMatch[2].trim();
-        if (hintText && hints.length < 4) {
-          hints.push(hintText);
-        }
+      // Skip obvious header lines
+      if (line.length < 5 ||
+          /^(HINT|Hint|hint)\s*\d/i.test(line) ||
+          /^(HARD|MODERATE|EASY|VERY EASY|Cryptic|Clear|Direct)/i.test(line) ||
+          line.toLowerCase().includes('generate') ||
+          line.toLowerCase().includes('example') ||
+          line.toLowerCase().includes('word to guess') ||
+          line.toLowerCase().includes('category:')) {
+        console.log(`Skipping header line ${i}:`, line);
+        continue;
+      }
+      
+      // Pattern 1: "1. hint text" or "1) hint text" or "1: hint text"
+      let match = line.match(/^(\d+)[\.\):\-]\s*(.+)$/);
+      if (match && match[2].trim().length > 5) {
+        const hintText = match[2].trim();
+        hints.push(hintText);
+        console.log(`Extracted hint ${hints.length} (numbered):`, hintText);
+        continue;
+      }
+      
+      // Pattern 2: "- hint text" or "• hint text"
+      match = line.match(/^[-•*]\s+(.+)$/);
+      if (match && match[1].trim().length > 5) {
+        const hintText = match[1].trim();
+        hints.push(hintText);
+        console.log(`Extracted hint ${hints.length} (bullet):`, hintText);
+        continue;
+      }
+      
+      // Pattern 3: Plain text line (no numbering)
+      if (line.length > 10 && !line.includes(':') && hints.length < 4) {
+        hints.push(line);
+        console.log(`Extracted hint ${hints.length} (plain):`, line);
       }
     }
-
-    // Method 2: If numbered pattern didn't work, try bullet points or dashes
-    if (hints.length < 4) {
-      hints.length = 0; // Clear previous attempts
-      
-      for (let line of lines) {
-        line = line.trim();
-        
-        // Match bullet points or dashes
-        const bulletMatch = line.match(/^[-•*]\s+(.+)$/);
-        if (bulletMatch) {
-          const hintText = bulletMatch[1].trim();
-          if (hintText && hints.length < 4) {
-            hints.push(hintText);
-          }
-        }
-      }
-    }
-
-    // Method 3: If still not enough, take any non-empty lines (skip headers/labels)
-    if (hints.length < 4) {
-      hints.length = 0;
-      
-      const filteredLines = lines
-        .map(l => l.trim())
-        .filter(l => {
-          // Skip common header/label patterns
-          if (!l) return false;
-          if (l.toLowerCase().includes('hint')) return false;
-          if (l.toLowerCase().includes('output')) return false;
-          if (l.toLowerCase().includes('format')) return false;
-          if (l.match(/^(requirement|rule|guideline)/i)) return false;
-          return true;
-        });
-      
-      hints.push(...filteredLines.slice(0, 4));
-    }
-
+    
+    console.log('Final extracted hints count:', hints.length);
+    console.log('Final hints:', hints);
+    console.log('=== END PARSING ===');
+    
     return hints.slice(0, 4); // Ensure exactly 4 hints
   }
 
   /**
    * Generate fallback hints if LLM fails
+   * Following the same difficulty progression with relatable clues
+   * Each hint limited to 10 words maximum
    */
   generateFallbackHints(word, topic) {
-    const categoryHints = {
-      food: "It's a type of food",
-      sports: "It's a sport or sports-related activity",
-      movies: "It's a movie or film-related",
-      animals: "It's an animal or creature",
-      places: "It's a place or location",
-      music: "It's music or instrument-related",
-      general: "It's a common word or object",
+    // Import custom clues from hints.js
+    const customClues = {
+      // General category words with relatable first hints
+      'Wedding': 'special ceremony, most people experience once in lifetime',
+      'Birthday': 'annual celebration of the day you were born',
+      'Party': 'social gathering with friends, music, and fun',
+      'Vacation': 'time off work to relax and travel',
+      'Camping': 'sleeping outdoors in tents, near nature',
+      'Picnic': 'outdoor meal on blanket, usually in park',
+      'Shopping': 'buying things at stores or online',
+      'Cooking': 'preparing food by heating and mixing ingredients',
+      'Reading': 'looking at words in books or screens',
+      'Phone': 'device for calling and texting people',
+      'Computer': 'electronic device for work and browsing internet',
+      'Tablet': 'flat touchscreen device for reading and apps',
+      'Camera': 'device that captures photos and videos',
+      'Selfie': 'photo you take of yourself with phone',
+      'Internet': 'worldwide network connecting computers and phones',
+      'Email': 'electronic messages sent through internet',
+      'Money': 'currency used to buy things',
+      'Calendar': 'shows days, months, and helps plan events',
     };
 
-    const blanks = Array(word.length).fill('_').join(' ');
+    const firstLetter = word[0].toUpperCase();
+    
+    // Create partial reveal showing some letters
     const partial = word.split('').map((char, index) => {
-      if (index === 0 || index === word.length - 1) return char;
-      if (word.length > 4 && index % 2 === 0) return char;
+      if (index === 0 || index === word.length - 1) return char.toUpperCase();
+      if (word.length > 5 && index % 2 === 1) return char.toUpperCase();
       return '_';
     }).join(' ');
 
+    // Get word-specific clue or create a generic one
+    let firstHint = customClues[word];
+    
+    if (!firstHint) {
+      // Generic hints based on topic if no custom clue
+      const topicHints = {
+        food: 'something delicious people love to eat',
+        sports: 'popular activity people play or watch',
+        movies: 'famous film people watch and enjoy',
+        animals: 'living creature found in nature',
+        places: 'location people visit or know about',
+        music: 'related to songs, sounds, or instruments',
+        general: 'common word people use in daily life',
+      };
+      firstHint = topicHints[topic] || 'common word you know well';
+    }
+
     return [
-      categoryHints[topic] || "It's a common word",
-      `It has ${word.length} letters: ${blanks}`,
-      `Starts with "${word[0]}", think about ${topic}`,
-      partial
+      // Hint 1: HARD - Word-specific, relatable context (max 10 words)
+      firstHint,
+      
+      // Hint 2: MODERATE - Category + letter count (max 10 words)
+      `A ${topic} word, has ${word.length} letters`,
+      
+      // Hint 3: EASY - First letter + direct hint (max 10 words)
+      `Starts with "${firstLetter}", ${word.length}-letter ${topic} word`,
+      
+      // Hint 4: VERY EASY - Partial reveal (max 10 words)
+      `${partial}`
     ];
   }
 }

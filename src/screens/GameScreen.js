@@ -208,71 +208,72 @@ export default function GameScreen({ route, navigation }) {
   };
 
   const loadNextWord = async () => {
-    setUsedWords(async prevUsedWords => {
-      console.log('Used words count:', prevUsedWords.length, 'Words:', prevUsedWords);
-      const word = getRandomWord(topic, prevUsedWords);
-      if (word) {
-        console.log('Next word:', word);
-        setCurrentWord(word);
-        setWordStartTime(Date.now());
-        setHintsShown(0);
-        setUserAnswer('');
-        setShowAnswer(false);
-        
-        // Setup based on mode
-        if (mode === 'ai-hints') {
-          setLoadingHints(true);
-          try {
-            const hints = await hintService.getHints(word, topic);
-            setCurrentHints(hints);
-            console.log('Loaded AI hints:', hints);
-          } catch (error) {
-            console.error('Error loading hints:', error);
-            // Fallback to static hints
-            const fallbackHints = generateHints(word, topic);
-            setCurrentHints(fallbackHints);
-          } finally {
-            setLoadingHints(false);
-          }
-        } else if (mode === 'time-attack') {
-          const randomMode = Math.random();
-          if (randomMode < 0.33) {
-            setScrambledWord(scrambleWord(word));
-            setDisplayPattern('scrambled');
-          } else if (randomMode < 0.66) {
-            setDisplayPattern('emoji');
-          } else {
-            setDisplayPattern('blanks');
-          }
-        }
-        
-        // Animate word appearance
-        scaleAnim.setValue(0.8);
-        fadeAnim.setValue(0);
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.spring(scaleAnim, {
-            toValue: 1,
-            friction: 8,
-            tension: 40,
-            useNativeDriver: true,
-          }),
-        ]).start();
-        
-        const newUsedWords = [...prevUsedWords, word];
-        console.log('Updated used words:', newUsedWords.length);
-        return newUsedWords; // Add word to used list
-      } else {
-        // No more words
-        console.log('No more words available! Ending game.');
-        endGame();
-        return prevUsedWords;
+    // Get the next word first
+    const word = getRandomWord(topic, usedWords);
+    
+    if (!word) {
+      // No more words available
+      console.log('No more words available! Ending game.');
+      endGame();
+      return;
+    }
+    
+    console.log('Next word:', word);
+    console.log('Used words count:', usedWords.length);
+    
+    // Update state
+    setCurrentWord(word);
+    setWordStartTime(Date.now());
+    setHintsShown(0);
+    setUserAnswer('');
+    setShowAnswer(false);
+    
+    // Add word to used words list
+    setUsedWords(prev => [...prev, word]);
+    
+    // Setup based on mode
+    if (mode === 'ai-hints') {
+      setLoadingHints(true);
+      try {
+        const hints = await hintService.getHints(word, topic);
+        setCurrentHints(hints);
+        console.log('Loaded AI hints:', hints);
+      } catch (error) {
+        console.error('Error loading hints:', error);
+        // Fallback to static hints
+        const fallbackHints = generateHints(word, topic);
+        setCurrentHints(fallbackHints);
+      } finally {
+        setLoadingHints(false);
       }
-    });
+    } else if (mode === 'time-attack') {
+      const randomMode = Math.random();
+      if (randomMode < 0.33) {
+        setScrambledWord(scrambleWord(word));
+        setDisplayPattern('scrambled');
+      } else if (randomMode < 0.66) {
+        setDisplayPattern('emoji');
+      } else {
+        setDisplayPattern('blanks');
+      }
+    }
+    
+    // Animate word appearance
+    scaleAnim.setValue(0.8);
+    fadeAnim.setValue(0);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
   };
 
   // Auto-show hints for AI Hints mode
@@ -600,7 +601,7 @@ export default function GameScreen({ route, navigation }) {
                   {currentHints.slice(0, hintsShown).map((hint, index) => (
                     <View key={index} style={styles.hintItem}>
                       <Ionicons name="bulb" size={16} color="rgba(255,255,255,0.9)" />
-                      <Text style={styles.hintText}>{hint}</Text>
+                      <Text style={styles.hintText}>{hint || ''}</Text>
                     </View>
                   ))}
                   {hintsShown < 4 && (
@@ -954,6 +955,8 @@ const styles = StyleSheet.create({
   timeAttackContainer: {
     alignItems: 'center',
     gap: spacing.md,
+    width: '100%',
+    paddingHorizontal: spacing.lg,
   },
   modeLabel: {
     fontSize: typography.fontSizeLg,
@@ -968,23 +971,26 @@ const styles = StyleSheet.create({
   hintsContainer: {
     marginTop: spacing.xl,
     width: '100%',
-    maxWidth: 500,
+    alignSelf: 'stretch',
   },
   hintItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
     marginBottom: spacing.sm,
     gap: spacing.sm,
+    width: '100%',
   },
   hintText: {
     fontSize: typography.fontSizeMd,
     color: 'rgba(255,255,255,0.95)',
     flex: 1,
     fontWeight: typography.fontWeightMedium,
+    lineHeight: 22,
+    flexShrink: 1,
   },
   hintTimer: {
     fontSize: typography.fontSizeSm,
