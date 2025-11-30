@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button, TopicCard } from '../components/CommonComponents';
 import { colors, typography, spacing, borderRadius, shadows, topicConfig } from '../theme';
 import { getAllTopics, getWordCount } from '../data/words';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,7 +42,8 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate('Game', { topic, mode: selectedMode });
   };
 
-  const topics = getAllTopics();
+  const { language } = useLanguage();
+  const topics = getAllTopics(language);
 
   // Single player game modes
   const singlePlayerModes = [
@@ -104,17 +106,7 @@ export default function HomeScreen({ navigation }) {
             </Text>
           </Animated.View>
 
-          {/* Settings Button */}
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <Button
-              title=""
-              icon={<Ionicons name="settings-outline" size={24} color={colors.white} />}
-              variant="ghost"
-              size="sm"
-              onPress={() => navigation.navigate('Settings')}
-              style={styles.settingsButton}
-            />
-          </Animated.View>
+          {/* (Settings button moved next to mode tabs) */}
         </View>
 
         {/* Topics Section */}
@@ -170,6 +162,15 @@ export default function HomeScreen({ navigation }) {
                 Single Player
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modeTabSettings}
+              onPress={() => navigation.navigate('Settings')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="settings-outline" size={18} color={colors.gray600} />
+              <Text style={styles.modeTabText}>Settings</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.topicsHeader}>
@@ -213,7 +214,7 @@ export default function HomeScreen({ navigation }) {
                 {/* Footer */}
                 <View style={styles.footer}>
                   <Text style={styles.footerText}>
-                    🎮 {topics.reduce((sum, topic) => sum + getWordCount(topic), 0)}+ words across {topics.length} categories
+                    🎮 {topics.reduce((sum, topic) => sum + getWordCount(topic, language), 0)}+ words across {topics.length} categories
                   </Text>
                 </View>
               </>
@@ -316,6 +317,32 @@ const styles = StyleSheet.create({
     top: StatusBar.currentHeight || spacing.xl,
     right: spacing.lg,
   },
+  settingsButtonVisible: {
+    position: 'absolute',
+    top: StatusBar.currentHeight ? StatusBar.currentHeight + 6 : spacing.xl + 6,
+    right: spacing.lg,
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
+  },
+  settingsButtonAlt: {
+    position: 'absolute',
+    top: StatusBar.currentHeight ? StatusBar.currentHeight + 6 : spacing.xl + 6,
+    right: spacing.lg,
+    backgroundColor: colors.white,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 50,
+    elevation: 50,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
   topicsContainer: {
     flex: 1,
     backgroundColor: colors.white,
@@ -353,6 +380,18 @@ const styles = StyleSheet.create({
   },
   modeTabTextActive: {
     color: colors.white,
+  },
+  modeTabSettings: {
+    width: 110,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+    gap: spacing.xs,
+    marginLeft: spacing.xs,
+    backgroundColor: 'transparent',
   },
   topicsHeader: {
     paddingHorizontal: spacing.lg,

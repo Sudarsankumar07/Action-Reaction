@@ -12,9 +12,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { Button } from '../components/CommonComponents';
+import { useLanguage } from '../contexts/LanguageContext';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
 export default function SettingsScreen({ navigation }) {
+  const { t, language, setLanguage } = useLanguage();
+
   const [settings, setSettings] = useState({
     soundEnabled: true,
     vibrationEnabled: true,
@@ -48,15 +51,51 @@ export default function SettingsScreen({ navigation }) {
           <View style={styles.headerIconContainer}>
             <Ionicons name="settings" size={32} color={colors.white} />
           </View>
-          <Text style={styles.headerTitle}>Settings</Text>
-          <Text style={styles.headerSubtitle}>Customize your experience</Text>
+          <Text style={styles.headerTitle}>{t('settings', 'Settings')}</Text>
+          <Text style={styles.headerSubtitle}>{t('settingsLabels.selectLanguage', 'Customize your experience')}</Text>
+
+          {/* Inline language selector in header for immediate visibility */}
+          <View style={styles.languageRow}>
+            <TouchableOpacity
+              style={[styles.languageButton, language === 'en' && styles.languageButtonActive]}
+              onPress={() => setLanguage('en')}
+            >
+              <Text style={[styles.languageButtonText, language === 'en' && styles.languageButtonTextActive]}> {t('labels.english', 'English')} </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.languageButton, language === 'ta' && styles.languageButtonActive]}
+              onPress={() => setLanguage('ta')}
+            >
+              <Text style={[styles.languageButtonText, language === 'ta' && styles.languageButtonTextActive]}> {t('labels.tamil', 'தமிழ் (Tamil)')} </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </LinearGradient>
+
+      {/* Visible language selector card (guaranteed to be visible) */}
+      <View style={[styles.section, { paddingHorizontal: spacing.lg }]}> 
+        <View style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+          <TouchableOpacity
+            style={[styles.languageButton, language === 'en' && styles.languageButtonActive]}
+            onPress={() => setLanguage('en')}
+          >
+            <Text style={[styles.languageButtonText, language === 'en' && styles.languageButtonTextActive]}>{t('labels.english', 'English')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.languageButton, language === 'ta' && styles.languageButtonActive]}
+            onPress={() => setLanguage('ta')}
+          >
+            <Text style={[styles.languageButtonText, language === 'ta' && styles.languageButtonTextActive]}>{t('labels.tamil', 'தமிழ் (Tamil)')}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Game Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Game Settings</Text>
+          <Text style={styles.sectionTitle}>{t('settingsLabels.difficulty', 'Game Settings')}</Text>
           
           <View style={styles.card}>
             <View style={styles.settingItem}>
@@ -125,7 +164,7 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Feedback Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Feedback</Text>
+          <Text style={styles.sectionTitle}>{t('settingsLabels.soundEffects', 'Feedback')}</Text>
           
           <View style={styles.card}>
             <View style={styles.settingItem}>
@@ -174,7 +213,7 @@ export default function SettingsScreen({ navigation }) {
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={styles.sectionTitle}>{t('about.howToPlay', 'About')}</Text>
           
           <View style={styles.card}>
             <View style={styles.aboutItem}>
@@ -210,9 +249,29 @@ export default function SettingsScreen({ navigation }) {
         </View>
 
         {/* Action Buttons */}
+        {/* Language Selector */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('settingsLabels.language', 'Language')}</Text>
+          <View style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between' }]}>
+            <TouchableOpacity
+              style={[styles.timerOption, language === 'en' && styles.timerOptionActive]}
+              onPress={() => setLanguage('en')}
+            >
+              <Text style={[styles.timerOptionText, language === 'en' && styles.timerOptionTextActive]}>{t('labels.english', 'English')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.timerOption, language === 'ta' && styles.timerOptionActive]}
+              onPress={() => setLanguage('ta')}
+            >
+              <Text style={[styles.timerOptionText, language === 'ta' && styles.timerOptionTextActive]}>{t('labels.tamil', 'தமிழ் (Tamil)')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Button
-            title="Back to Home"
+            title={t('labels.backToHome', 'Back to Home')}
             onPress={() => navigation.navigate('Home')}
             gradient={[colors.primary, colors.primaryDark]}
             icon={<Ionicons name="home" size={20} color={colors.white} />}
@@ -276,6 +335,33 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeightBold,
     color: colors.gray900,
     marginBottom: spacing.md,
+  },
+  languageRow: {
+    flexDirection: 'row',
+    marginTop: spacing.md,
+    gap: spacing.sm,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  languageButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    marginHorizontal: spacing.xs,
+  },
+  languageButtonActive: {
+    backgroundColor: colors.white,
+  },
+  languageButtonText: {
+    color: colors.white,
+    fontSize: typography.fontSizeMd,
+    fontWeight: typography.fontWeightSemibold,
+  },
+  languageButtonTextActive: {
+    color: colors.primary,
   },
   card: {
     backgroundColor: colors.white,

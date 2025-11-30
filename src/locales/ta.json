@@ -1,0 +1,55 @@
+{
+  "home": "முகப்பு",
+  "game": "விளையாட்டு",
+  "scoreboard": "மதிப்பெண் பலகை",
+  "settings": "அமைப்புகள்",
+  "selectTopic": "தலைப்பைத் தேர்ந்தெடுக்கவும்",
+  "startGame": "விளையாட்டைத் தொடங்கு",
+  "correct": "சரி",
+  "pass": "தவிர்",
+  "timeLeft": "விநாடிகள்",
+  "flipDown": "கீழே புரட்டு",
+  "flipUp": "மேலே புரட்டு",
+  "getReady": "தயாராகுங்கள்!",
+  "timesUp": "நேரம் முடிந்தது!",
+  "roundComplete": "சுற்று முடிந்தது!",
+  "correctAnswers": "சரியான பதில்கள்",
+  "accuracy": "துல்லியம்",
+  "playAgain": "மீண்டும் விளையாடு",
+  "changeTopic": "தலைப்பை மாற்று",
+  "topics": {
+    "food": "உணவு",
+    "sports": "விளையாட்டு",
+    "movies": "திரைப்படங்கள்",
+    "animals": "விலங்குகள்",
+    "places": "இடங்கள்",
+    "general": "பொதுவானது"
+  },
+  "messages": {
+    "amazing": "அற்புதம்!",
+    "greatJob": "நன்றாக செய்தீர்கள்!",
+    "goodWork": "நல்ல வேலை!",
+    "keepPracticing": "தொடர்ந்து பயிற்சி செய்யுங்கள்!"
+  },
+  "settingsLabels": {
+    "language": "மொழி",
+    "selectLanguage": "மொழியைத் தேர்ந்தெடுக்கவும்",
+    "difficulty": "சிரமம்",
+    "soundEffects": "ஒலி விளைவுகள்",
+    "vibration": "அதிர்வு",
+    "timerDuration": "சுழற்சி காலம்",
+    "flipSensitivity": "பரழிப்பு சென்சிட்டிவிட்டி",
+    "soundEffectsLabel": "ஒலி விளைவுகள்",
+    "hapticFeedback": "ஹாப்டிக் கருத்து"
+  },
+  "about": {
+    "version": "பதிப்பு",
+    "builtWith": "உருவாக்கப்பட்டது",
+    "howToPlay": "விளையாடுவது எப்படி"
+  },
+  "labels": {
+    "english": "English",
+    "tamil": "தமிழ் (Tamil)",
+    "backToHome": "மீண்டும் முகப்புக்கு"
+  }
+}
