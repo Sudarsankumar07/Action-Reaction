@@ -440,6 +440,7 @@ export default function GameScreen({ route, navigation }) {
         passed: finalPassed,
         total: finalTotal,
         topic,
+        mode,
       });
     }, 1000);
   };
