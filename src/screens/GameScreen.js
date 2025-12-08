@@ -57,6 +57,10 @@ export default function GameScreen({ route, navigation }) {
   const [memoryWords, setMemoryWords] = useState([]);
   const [memoryPhase, setMemoryPhase] = useState('display'); // 'display', 'recall', 'result'
   const [memoryIndex, setMemoryIndex] = useState(0);
+  const [memoryRecalledWords, setMemoryRecalledWords] = useState([]); // Words user recalled
+  const [memoryCorrectWords, setMemoryCorrectWords] = useState([]); // Correctly recalled words
+  const [memoryAttempts, setMemoryAttempts] = useState(0); // Number of recall attempts
+  const [memoryResultMessage, setMemoryResultMessage] = useState(''); // Result message
   const [userAnswer, setUserAnswer] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
   const [loadingHints, setLoadingHints] = useState(false);
@@ -179,19 +183,32 @@ export default function GameScreen({ route, navigation }) {
   };
 
   const startMemoryChallenge = () => {
-    // Generate 5 random words for memory challenge
+    // Generate 3-5 random words for memory challenge
+    const wordCount = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5 words
     const words = [];
-    const tempUsed = [];
-    for (let i = 0; i < 5; i++) {
+    const tempUsed = [...usedWords];
+    
+    for (let i = 0; i < wordCount; i++) {
       const word = getRandomWord(topic, tempUsed);
       if (word) {
         words.push(word);
         tempUsed.push(word);
       }
     }
+    
+    console.log('Memory Challenge - Words to show:', words);
+    
     setMemoryWords(words);
     setMemoryPhase('display');
     setMemoryIndex(0);
+    setMemoryRecalledWords([]);
+    setMemoryCorrectWords([]);
+    setMemoryAttempts(0);
+    setUserAnswer('');
+    setShowAnswer(false);
+    
+    // Add words to used words list
+    setUsedWords(prev => [...prev, ...words]);
     
     // Show words one by one
     const showNextWord = (index) => {
@@ -200,8 +217,10 @@ export default function GameScreen({ route, navigation }) {
         setMemoryIndex(index);
         setTimeout(() => showNextWord(index + 1), 2000);
       } else {
+        // Move to recall phase
         setMemoryPhase('recall');
-        setCurrentWord('Remember the words!');
+        setMemoryIndex(0);
+        setCurrentWord('');
       }
     };
     showNextWord(0);
@@ -292,6 +311,13 @@ export default function GameScreen({ route, navigation }) {
   const handleSubmitAnswer = () => {
     if (!userAnswer.trim()) return;
     
+    // Memory game recall logic
+    if (mode === 'memory' && memoryPhase === 'recall') {
+      handleMemoryRecall();
+      return;
+    }
+    
+    // Regular game modes
     const isCorrect = userAnswer.toLowerCase().trim() === currentWord.toLowerCase();
     
     if (isCorrect) {
@@ -314,6 +340,88 @@ export default function GameScreen({ route, navigation }) {
         loadNextWord();
       }, 2000);
     }
+  };
+  
+  // Handle memory game recall
+  const handleMemoryRecall = () => {
+    const userInput = userAnswer.toLowerCase().trim();
+    
+    // Check if word matches any shown word
+    let found = false;
+    for (const word of memoryWords) {
+      if (word.toLowerCase() === userInput) {
+        // Check if already recalled
+        if (memoryCorrectWords.includes(word)) {
+          showFeedback('already');
+          setUserAnswer('');
+          return;
+        }
+        // Correct recall!
+        found = true;
+        setMemoryCorrectWords(prev => [...prev, word]);
+        showFeedback('correct');
+        break;
+      }
+    }
+    
+    if (!found) {
+      showFeedback('pass');
+    }
+    
+    // Track attempt
+    const newAttempts = memoryAttempts + 1;
+    setMemoryAttempts(newAttempts);
+    setMemoryRecalledWords(prev => [...prev, userAnswer.trim()]);
+    setUserAnswer('');
+    
+    // Check if all words recalled or max attempts reached
+    const newCorrectCount = found ? memoryCorrectWords.length + 1 : memoryCorrectWords.length;
+    
+    if (newCorrectCount === memoryWords.length) {
+      // Perfect recall!
+      setTimeout(() => showMemoryResults(newCorrectCount), 500);
+    } else if (newAttempts >= memoryWords.length * 2) {
+      // Max attempts reached (2x word count)
+      setTimeout(() => showMemoryResults(newCorrectCount), 500);
+    }
+  };
+  
+  // Show memory game results
+  const showMemoryResults = (correctCount) => {
+    setMemoryPhase('result');
+    
+    const total = memoryWords.length;
+    const percentage = (correctCount / total) * 100;
+    
+    // Calculate points
+    let points = 0;
+    if (percentage === 100) {
+      points = 5; // Perfect recall
+      setMemoryResultMessage(`🎉 Perfect! ${correctCount}/${total} words!`);
+    } else if (percentage >= 66) {
+      points = 3; // Good recall
+      setMemoryResultMessage(`👍 Great! ${correctCount}/${total} words!`);
+    } else if (percentage >= 33) {
+      points = 1; // Partial recall
+      setMemoryResultMessage(`😊 Good try! ${correctCount}/${total} words!`);
+    } else {
+      points = 0; // Poor recall
+      setMemoryResultMessage(`💪 Keep trying! ${correctCount}/${total} words!`);
+    }
+    
+    // Add score
+    setScore(prev => {
+      const newScore = prev + points;
+      scoreRef.current = newScore;
+      return newScore;
+    });
+    
+    console.log(`Memory Round Complete: ${correctCount}/${total} words, +${points} points`);
+    
+    // Start next round after showing results
+    setTimeout(() => {
+      startMemoryChallenge();
+    }, 3000);
   };
 
   const handleCorrect = () => {
@@ -587,7 +695,64 @@ export default function GameScreen({ route, navigation }) {
           ]}
         >
           {/* Display based on mode */}
-          {mode === 'ai-hints' ? (
+          {mode === 'memory' && memoryPhase === 'display' ? (
+            <View style={styles.timeAttackContainer}>
+              <Ionicons name="eye" size={80} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.modeLabel}>Word {memoryIndex + 1}/{memoryWords.length}</Text>
+              <Text style={styles.word}>{currentWord}</Text>
+              <Text style={styles.hintText}>Memorize this word!</Text>
+            </View>
+          ) : mode === 'memory' && memoryPhase === 'recall' ? (
+            <View style={styles.timeAttackContainer}>
+              <Ionicons name="bulb-outline" size={80} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.modeLabel}>Recall the Words!</Text>
+              <Text style={styles.hintText}>Type the words you remember ({memoryCorrectWords.length}/{memoryWords.length})</Text>
+              
+              {/* Show recalled words */}
+              <View style={styles.memoryListContainer}>
+                {memoryWords.map((word, index) => {
+                  const isRecalled = memoryCorrectWords.includes(word);
+                  return (
+                    <View key={index} style={styles.memoryWordItem}>
+                      <Ionicons 
+                        name={isRecalled ? "checkmark-circle" : "ellipse-outline"} 
+                        size={20} 
+                        color={isRecalled ? colors.success : "rgba(255,255,255,0.3)"} 
+                      />
+                      <Text style={[styles.memoryWordText, isRecalled && styles.memoryWordRecalled]}>
+                        {isRecalled ? word : '?????'}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ) : mode === 'memory' && memoryPhase === 'result' ? (
+            <View style={styles.timeAttackContainer}>
+              <Ionicons name="trophy" size={80} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.word}>{memoryResultMessage}</Text>
+              
+              {/* Show all words with status */}
+              <View style={styles.memoryListContainer}>
+                {memoryWords.map((word, index) => {
+                  const isRecalled = memoryCorrectWords.includes(word);
+                  return (
+                    <View key={index} style={styles.memoryWordItem}>
+                      <Ionicons 
+                        name={isRecalled ? "checkmark-circle" : "close-circle"} 
+                        size={20} 
+                        color={isRecalled ? colors.success : colors.error} 
+                      />
+                      <Text style={styles.memoryWordText}>{word}</Text>
+                      {!isRecalled && <Text style={styles.memoryMissed}>(missed)</Text>}
+                    </View>
+                  );
+                })}
+              </View>
+              
+              <Text style={styles.hintTimer}>Loading next round...</Text>
+            </View>
+          ) : mode === 'ai-hints' ? (
             <View style={styles.timeAttackContainer}>
               <Ionicons name="help-circle-outline" size={80} color="rgba(255,255,255,0.8)" />
               <Text style={styles.modeLabel}>Use the hints to guess the word!</Text>
@@ -645,7 +810,7 @@ export default function GameScreen({ route, navigation }) {
       </View>
 
       {/* Single-player Input Controls */}
-      {mode !== 'multiplayer' && mode !== 'practice' && (
+      {mode !== 'multiplayer' && mode !== 'practice' && !(mode === 'memory' && (memoryPhase === 'display' || memoryPhase === 'result')) && (
         <View style={styles.inputContainer}>
           {showAnswer && (
             <View style={styles.answerReveal}>
@@ -679,6 +844,13 @@ export default function GameScreen({ route, navigation }) {
           <TouchableOpacity 
             style={styles.skipButton}
             onPress={() => {
+              // Memory game: finish recall and show results
+              if (mode === 'memory' && memoryPhase === 'recall') {
+                showMemoryResults(memoryCorrectWords.length);
+                return;
+              }
+              
+              // Other modes: skip to next word
               setShowAnswer(true);
               showFeedback('pass');
               setPassed(prev => prev + 1);
@@ -687,7 +859,9 @@ export default function GameScreen({ route, navigation }) {
               setTimeout(() => loadNextWord(), 2000);
             }}
           >
-            <Text style={styles.skipButtonText}>Skip</Text>
+            <Text style={styles.skipButtonText}>
+              {mode === 'memory' && memoryPhase === 'recall' ? 'Finish & Score' : 'Skip'}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -1051,7 +1225,37 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     fontSize: typography.fontSizeMd,
+    fontWeight: typography.fontWeightBold,
+    color: colors.white,
+  },
+  memoryListContainer: {
+    marginTop: spacing.lg,
+    width: '100%',
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  memoryWordItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    gap: spacing.sm,
+  },
+  memoryWordText: {
+    fontSize: typography.fontSizeMd,
     color: 'rgba(255,255,255,0.9)',
-    fontWeight: typography.fontWeightSemibold,
+    fontWeight: typography.fontWeightMedium,
+    flex: 1,
+  },
+  memoryWordRecalled: {
+    color: colors.white,
+    fontWeight: typography.fontWeightBold,
+  },
+  memoryMissed: {
+    fontSize: typography.fontSizeSm,
+    color: 'rgba(255,255,255,0.5)',
+    fontStyle: 'italic',
   },
 });
