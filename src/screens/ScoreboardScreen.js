@@ -16,7 +16,7 @@ import { colors, typography, spacing, borderRadius, topicConfig } from '../theme
 const { width } = Dimensions.get('window');
 
 export default function ScoreboardScreen({ route, navigation }) {
-  const { score, passed, total, topic } = route.params;
+  const { score, passed, total, topic, mode } = route.params;
   const config = topicConfig[topic];
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -83,8 +83,10 @@ export default function ScoreboardScreen({ route, navigation }) {
             </View>
             <Text style={styles.title}>Round Complete!</Text>
             <Text style={styles.subtitle}>{getMessage()}</Text>
-          </Animated.View>        {/* Stats Card */}
-        <Animated.View
+          </Animated.View>
+          
+          {/* Stats Card */}
+          <Animated.View
           style={[
             styles.statsCard,
             {
@@ -159,7 +161,7 @@ export default function ScoreboardScreen({ route, navigation }) {
         >
           <Button
             title="Play Again"
-            onPress={() => navigation.replace('Game', { topic })}
+            onPress={() => navigation.replace('Game', { topic, mode })}
             gradient={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)']}
             style={styles.button}
             icon={<Ionicons name="refresh" size={24} color={colors.white} />}
@@ -170,6 +172,7 @@ export default function ScoreboardScreen({ route, navigation }) {
             onPress={() => navigation.navigate('Home')}
             variant="outline"
             style={[styles.button, styles.outlineButton]}
+            textStyle={styles.outlineButtonText}
           />
 
           <Button
@@ -320,5 +323,9 @@ const styles = StyleSheet.create({
   outlineButton: {
     borderColor: colors.white,
     borderWidth: 2,
+  },
+  outlineButtonText: {
+    color: colors.white,
+    fontWeight: typography.fontWeightBold,
   },
 });
