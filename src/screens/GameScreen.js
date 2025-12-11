@@ -57,7 +57,6 @@ export default function GameScreen({ route, navigation }) {
   const [memoryWords, setMemoryWords] = useState([]);
   const [memoryPhase, setMemoryPhase] = useState('display'); // 'display', 'recall', 'result'
   const [memoryIndex, setMemoryIndex] = useState(0);
-  const [memoryRecalledWords, setMemoryRecalledWords] = useState([]); // Words user recalled
   const [memoryCorrectWords, setMemoryCorrectWords] = useState([]); // Correctly recalled words
   const [memoryAttempts, setMemoryAttempts] = useState(0); // Number of recall attempts
   const [memoryResultMessage, setMemoryResultMessage] = useState(''); // Result message
@@ -186,14 +185,26 @@ export default function GameScreen({ route, navigation }) {
     // Generate 3-5 random words for memory challenge
     const wordCount = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5 words
     const words = [];
-    const tempUsed = [...usedWords];
+    const tempUsed = []; // Track words for this challenge only
     
     for (let i = 0; i < wordCount; i++) {
-      const word = getRandomWord(topic, tempUsed);
+      // Pass combined list (usedWords + tempUsed) to avoid any duplicates
+      const word = getRandomWord(topic, [...usedWords, ...tempUsed]);
       if (word) {
         words.push(word);
         tempUsed.push(word);
+      } else {
+        // No more words available, break early to prevent undefined values
+        console.warn('Not enough words available for memory challenge');
+        break;
       }
+    }
+    
+    // Check if we have at least 3 words for a valid memory game
+    if (words.length < 3) {
+      console.error('Insufficient words for memory game, ending game');
+      endGame();
+      return;
     }
     
     console.log('Memory Challenge - Words to show:', words);
@@ -201,7 +212,6 @@ export default function GameScreen({ route, navigation }) {
     setMemoryWords(words);
     setMemoryPhase('display');
     setMemoryIndex(0);
-    setMemoryRecalledWords([]);
     setMemoryCorrectWords([]);
     setMemoryAttempts(0);
     setUserAnswer('');
@@ -371,7 +381,6 @@ export default function GameScreen({ route, navigation }) {
     // Track attempt
     const newAttempts = memoryAttempts + 1;
     setMemoryAttempts(newAttempts);
-    setMemoryRecalledWords(prev => [...prev, userAnswer.trim()]);
     setUserAnswer('');
     
     // Check if all words recalled or max attempts reached
@@ -418,9 +427,11 @@ export default function GameScreen({ route, navigation }) {
     
     console.log(`Memory Round Complete: ${correctCount}/${total} words, +${points} points`);
     
-    // Start next round after showing results
+    // Start next round after showing results (only if game hasn't ended)
     setTimeout(() => {
-      startMemoryChallenge();
+      if (!gameEndedRef.current) {
+        startMemoryChallenge();
+      }
     }, 3000);
   };
 

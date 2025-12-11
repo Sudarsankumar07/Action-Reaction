@@ -358,7 +358,6 @@ export const emojiHints = {
   'Jellyfish': '🪼',
   'Starfish': '⭐',
   'Crab': '🦀',
-  'Lobster': '🦞',
   'Turtle': '🐢',
   'Crocodile': '🐊',
   'Alligator': '🐊',

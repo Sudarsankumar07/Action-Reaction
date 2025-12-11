@@ -15,6 +15,12 @@ class HintService {
   async isOnline() {
     try {
       const netState = await NetInfo.fetch();
+      
+      // Explicitly handle null/undefined as offline (some platforms may return null)
+      if (netState.isInternetReachable === null || netState.isInternetReachable === undefined) {
+        return false;
+      }
+      
       return netState.isConnected && netState.isInternetReachable;
     } catch (error) {
       console.log('Network check failed, assuming offline');

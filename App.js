@@ -25,7 +25,11 @@ export default function App() {
         // Simulate minimum splash screen display time (2 seconds)
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (e) {
-        console.warn('Error loading app resources:', e);
+        console.warn('Error during app initialization (e.g., splash screen delay or resource loading).', {
+          error: e,
+          message: e?.message,
+          stack: e?.stack,
+        });
       } finally {
         // Tell the application to render
         setAppIsReady(true);
