@@ -72,28 +72,35 @@ export default function SettingsScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       
-      {/* Header */}
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
-        style={styles.header}
+        style={styles.gradient}
       >
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.white} />
-        </TouchableOpacity>
-        
-        <View style={styles.headerContent}>
-          <View style={styles.headerIconContainer}>
-            <Ionicons name="settings" size={32} color={colors.white} />
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity 
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.white} />
+            </TouchableOpacity>
+            
+            <View style={styles.headerContent}>
+              <View style={styles.headerIconContainer}>
+                <Ionicons name="settings" size={32} color={colors.white} />
+              </View>
+              <Text style={styles.headerTitle}>Settings</Text>
+              <Text style={styles.headerSubtitle}>Customize your experience</Text>
+            </View>
           </View>
-          <Text style={styles.headerTitle}>Settings</Text>
-          <Text style={styles.headerSubtitle}>Customize your experience</Text>
-        </View>
-      </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Settings Content */}
+          <View style={styles.settingsContainer}>
         {/* Game Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Game Settings</Text>
@@ -281,6 +288,7 @@ export default function SettingsScreen({ navigation }) {
             icon={<Ionicons name="home" size={20} color={colors.white} />}
           />
         </View>
+        </View>
       </ScrollView>
 
       {/* Custom Time Modal */}
@@ -333,6 +341,7 @@ export default function SettingsScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+      </LinearGradient>
     </View>
   );
 }
@@ -341,6 +350,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.backgroundLight,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     paddingTop: StatusBar.currentHeight || spacing.xl,
@@ -378,8 +396,12 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeMd,
     color: 'rgba(255,255,255,0.9)',
   },
-  content: {
+  settingsContainer: {
     flex: 1,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: borderRadius.xxl,
+    borderTopRightRadius: borderRadius.xxl,
+    paddingTop: spacing.md,
   },
   section: {
     paddingHorizontal: spacing.lg,
