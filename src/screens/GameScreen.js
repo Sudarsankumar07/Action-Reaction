@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Accelerometer } from 'expo-sensors';
 import * as Haptics from 'expo-haptics';
@@ -43,6 +44,7 @@ export default function GameScreen({ route, navigation }) {
   const [score, setScore] = useState(0);
   const [passed, setPassed] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
+  const [initialTimer, setInitialTimer] = useState(60);
   const [gameStarted, setGameStarted] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [gameEnded, setGameEnded] = useState(false);
@@ -80,6 +82,23 @@ export default function GameScreen({ route, navigation }) {
   const lastAction = useRef(Date.now());
   const sensitivity = 0.7; // Adjusted for flip detection (lower value for z-axis)
   const isProcessing = useRef(false); // Add flag to prevent multiple triggers
+
+  // Load timer setting from AsyncStorage
+  useEffect(() => {
+    async function loadTimer() {
+      try {
+        const savedTimer = await AsyncStorage.getItem('game_timer');
+        if (savedTimer) {
+          const timerValue = parseInt(savedTimer, 10);
+          setTimeLeft(timerValue);
+          setInitialTimer(timerValue);
+        }
+      } catch (error) {
+        console.error('Error loading timer setting:', error);
+      }
+    }
+    loadTimer();
+  }, []);
 
   // Lock orientation based on mode
   useEffect(() => {
