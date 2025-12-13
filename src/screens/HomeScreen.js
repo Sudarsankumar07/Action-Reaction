@@ -84,6 +84,17 @@ export default function HomeScreen({ navigation }) {
       >
         {/* Header */}
         <View style={styles.header}>
+          {/* Settings Button */}
+          <Animated.View style={[styles.settingsButtonContainer, { opacity: fadeAnim }]}>
+            <TouchableOpacity
+              style={styles.settingsButton}
+              onPress={() => navigation.navigate('Settings')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.white} />
+            </TouchableOpacity>
+          </Animated.View>
+
           <Animated.View 
             style={[
               styles.headerContent,
@@ -102,18 +113,6 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.subtitle}>
               Hold your phone on your forehead{'\n'}Let others act it out!
             </Text>
-          </Animated.View>
-
-          {/* Settings Button */}
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <Button
-              title=""
-              icon={<Ionicons name="settings-outline" size={24} color={colors.white} />}
-              variant="ghost"
-              size="sm"
-              onPress={() => navigation.navigate('Settings')}
-              style={styles.settingsButton}
-            />
           </Animated.View>
         </View>
 
@@ -311,10 +310,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  settingsButton: {
+  settingsButtonContainer: {
     position: 'absolute',
-    top: StatusBar.currentHeight || spacing.xl,
+    top: spacing.xl,
     right: spacing.lg,
+    zIndex: 10,
+  },
+  settingsButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 25,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.md,
   },
   topicsContainer: {
     flex: 1,
