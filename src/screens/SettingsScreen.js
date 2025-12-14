@@ -211,31 +211,11 @@ export default function SettingsScreen({ navigation }) {
           </View>
         </View>
 
-        {/* About Section */}
+        {/* How to Play Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('about.howToPlay', 'About')}</Text>
+          <Text style={styles.sectionTitle}>How to Play</Text>
           
           <View style={styles.card}>
-            <View style={styles.aboutItem}>
-              <Ionicons name="information-circle" size={24} color={colors.primary} />
-              <View style={styles.aboutText}>
-                <Text style={styles.aboutLabel}>Version</Text>
-                <Text style={styles.aboutValue}>1.0.0</Text>
-              </View>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.aboutItem}>
-              <Ionicons name="code-slash" size={24} color={colors.primary} />
-              <View style={styles.aboutText}>
-                <Text style={styles.aboutLabel}>Built With</Text>
-                <Text style={styles.aboutValue}>React Native & Expo</Text>
-              </View>
-            </View>
-
-            <View style={styles.divider} />
-
             <View style={styles.aboutItem}>
               <Ionicons name="bulb" size={24} color={colors.primary} />
               <View style={styles.aboutText}>

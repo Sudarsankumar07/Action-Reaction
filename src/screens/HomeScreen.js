@@ -106,7 +106,18 @@ export default function HomeScreen({ navigation }) {
             </Text>
           </Animated.View>
 
-          {/* (Settings button moved next to mode tabs) */}
+          {/* Settings Button */}
+
+          <Animated.View style={[styles.settingsButtonContainer, { opacity: fadeAnim }]}>
+            <TouchableOpacity
+              style={styles.settingsButton}
+              onPress={() => navigation.navigate('Settings')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.white} />
+
+            </TouchableOpacity>
+          </Animated.View>
         </View>
 
         {/* Topics Section */}
@@ -163,14 +174,7 @@ export default function HomeScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.modeTabSettings}
-              onPress={() => navigation.navigate('Settings')}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="settings-outline" size={18} color={colors.gray600} />
-              <Text style={styles.modeTabText}>Settings</Text>
-            </TouchableOpacity>
+            
           </View>
 
           <View style={styles.topicsHeader}>
@@ -313,9 +317,18 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   settingsButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 25,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  settingsButtonContainer: {
     position: 'absolute',
-    top: StatusBar.currentHeight || spacing.xl,
+    top: spacing.xl,
     right: spacing.lg,
+    zIndex: 10,
   },
   settingsButtonVisible: {
     position: 'absolute',
@@ -461,4 +474,8 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 18,
   },
+
 });
+
+
+
