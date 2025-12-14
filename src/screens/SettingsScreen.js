@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,10 @@ import {
   StatusBar,
   Switch,
   TouchableOpacity,
+  Modal,
+  TextInput,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
@@ -21,9 +24,79 @@ export default function SettingsScreen({ navigation }) {
     sensitivity: 1.5,
     timerDuration: 60,
   });
+  const [showCustomTimeModal, setShowCustomTimeModal] = useState(false);
+  const [customTimeInput, setCustomTimeInput] = useState('');
+  const [customTimeError, setCustomTimeError] = useState('');
+  const [isSavingTimer, setIsSavingTimer] = useState(false);
 
-  const updateSetting = (key, value) => {
-    setSettings({ ...settings, [key]: value });
+  // Load saved timer setting on mount
+  useEffect(() => {
+    loadTimerSetting();
+  }, []);
+
+  const loadTimerSetting = async () => {
+    try {
+      const savedTimer = await AsyncStorage.getItem('game_timer');
+      if (savedTimer) {
+        const timerValue = parseInt(savedTimer, 10);
+        setSettings(prev => ({ ...prev, timerDuration: timerValue }));
+      }
+    } catch (error) {
+      console.error('Error loading timer setting:', error);
+    }
+  };
+
+  const updateSetting = async (key, value) => {
+    // Prevent concurrent timer modifications
+    if (key === 'timerDuration' && isSavingTimer) {
+      return;
+    }
+    
+    // Use functional update to avoid stale closure issues
+    setSettings(prevSettings => ({ ...prevSettings, [key]: value }));
+    
+    // Save timer duration to AsyncStorage
+    if (key === 'timerDuration') {
+      setIsSavingTimer(true);
+      try {
+        await AsyncStorage.setItem('game_timer', value.toString());
+      } catch (error) {
+        console.error('Error saving timer setting:', error);
+      } finally {
+        setIsSavingTimer(false);
+      }
+    }
+  };
+
+  const handleCustomTime = async () => {
+    const customTime = parseInt(customTimeInput, 10);
+    
+    // Validate input and provide specific error messages
+    if (!customTimeInput.trim()) {
+      setCustomTimeError('Please enter a timer duration');
+      return;
+    }
+    
+    if (isNaN(customTime)) {
+      setCustomTimeError('Please enter a valid number');
+      return;
+    }
+    
+    if (customTime < 15) {
+      setCustomTimeError('Timer must be at least 15 seconds');
+      return;
+    }
+    
+    if (customTime > 600) {
+      setCustomTimeError('Timer cannot exceed 600 seconds (10 minutes)');
+      return;
+    }
+    
+    // Valid input - close modal and save
+    setShowCustomTimeModal(false);
+    setCustomTimeInput('');
+    setCustomTimeError('');
+    await updateSetting('timerDuration', customTime);
   };
 
   const timerOptions = [30, 60, 90, 120];
@@ -32,28 +105,35 @@ export default function SettingsScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       
-      {/* Header */}
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
-        style={styles.header}
+        style={styles.gradient}
       >
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.white} />
-        </TouchableOpacity>
-        
-        <View style={styles.headerContent}>
-          <View style={styles.headerIconContainer}>
-            <Ionicons name="settings" size={32} color={colors.white} />
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity 
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.white} />
+            </TouchableOpacity>
+            
+            <View style={styles.headerContent}>
+              <View style={styles.headerIconContainer}>
+                <Ionicons name="settings" size={32} color={colors.white} />
+              </View>
+              <Text style={styles.headerTitle}>Settings</Text>
+              <Text style={styles.headerSubtitle}>Customize your experience</Text>
+            </View>
           </View>
-          <Text style={styles.headerTitle}>Settings</Text>
-          <Text style={styles.headerSubtitle}>Customize your experience</Text>
-        </View>
-      </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Settings Content */}
+          <View style={styles.settingsContainer}>
         {/* Game Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Game Settings</Text>
@@ -78,8 +158,10 @@ export default function SettingsScreen({ navigation }) {
                     style={[
                       styles.timerOption,
                       settings.timerDuration === duration && styles.timerOptionActive,
+                      isSavingTimer && styles.timerOptionDisabled,
                     ]}
                     onPress={() => updateSetting('timerDuration', duration)}
+                    disabled={isSavingTimer}
                   >
                     <Text
                       style={[
@@ -92,6 +174,31 @@ export default function SettingsScreen({ navigation }) {
                   </TouchableOpacity>
                 ))}
               </View>
+              <TouchableOpacity
+                style={[
+                  styles.customTimeButton,
+                  !timerOptions.includes(settings.timerDuration) && styles.customTimeButtonActive,
+                  isSavingTimer && styles.timerOptionDisabled,
+                ]}
+                onPress={() => setShowCustomTimeModal(true)}
+                disabled={isSavingTimer}
+              >
+                <Ionicons 
+                  name="create-outline" 
+                  size={16} 
+                  color={!timerOptions.includes(settings.timerDuration) ? colors.white : colors.primary} 
+                />
+                <Text
+                  style={[
+                    styles.customTimeButtonText,
+                    !timerOptions.includes(settings.timerDuration) && styles.customTimeButtonTextActive,
+                  ]}
+                >
+                  {!timerOptions.includes(settings.timerDuration) 
+                    ? `${settings.timerDuration}s` 
+                    : 'Custom'}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.divider} />
@@ -218,7 +325,85 @@ export default function SettingsScreen({ navigation }) {
             icon={<Ionicons name="home" size={20} color={colors.white} />}
           />
         </View>
+        </View>
       </ScrollView>
+
+      {/* Custom Time Modal */}
+      <Modal
+        visible={showCustomTimeModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCustomTimeModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Ionicons name="time-outline" size={32} color={colors.primary} />
+              <Text style={styles.modalTitle}>Custom Timer</Text>
+            </View>
+            
+            <Text style={styles.modalDescription}>
+              Enter duration in seconds (15-600)
+            </Text>
+            
+            <TextInput
+              style={styles.modalInput}
+              value={customTimeInput}
+              onChangeText={(text) => {
+                setCustomTimeInput(text);
+                // Real-time validation as user types
+                if (text.trim() === '') {
+                  setCustomTimeError('');
+                } else {
+                  const value = parseInt(text, 10);
+                  if (isNaN(value)) {
+                    setCustomTimeError('Please enter a valid number');
+                  } else if (value < 15) {
+                    setCustomTimeError('Timer must be at least 15 seconds');
+                  } else if (value > 600) {
+                    setCustomTimeError('Timer cannot exceed 600 seconds (10 minutes)');
+                  } else {
+                    setCustomTimeError('');
+                  }
+                }
+              }}
+              placeholder="e.g., 45"
+              placeholderTextColor={colors.gray400}
+              keyboardType="numeric"
+              maxLength={3}
+              autoFocus
+            />
+            
+            {customTimeError ? (
+              <View style={styles.errorContainer}>
+                <Ionicons name="warning" size={16} color={colors.error} />
+                <Text style={styles.errorText}>{customTimeError}</Text>
+              </View>
+            ) : null}
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => {
+                  setShowCustomTimeModal(false);
+                  setCustomTimeInput('');
+                  setCustomTimeError('');
+                }}
+              >
+                <Text style={styles.modalButtonTextCancel}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonConfirm]}
+                onPress={handleCustomTime}
+              >
+                <Text style={styles.modalButtonTextConfirm}>Set Timer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      </LinearGradient>
     </View>
   );
 }
@@ -227,6 +412,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.backgroundLight,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     paddingTop: StatusBar.currentHeight || spacing.xl,
@@ -264,8 +458,12 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeMd,
     color: 'rgba(255,255,255,0.9)',
   },
-  content: {
+  settingsContainer: {
     flex: 1,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: borderRadius.xxl,
+    borderTopRightRadius: borderRadius.xxl,
+    paddingTop: spacing.md,
   },
   section: {
     paddingHorizontal: spacing.lg,
@@ -367,5 +565,113 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeSm,
     color: colors.gray600,
     lineHeight: 20,
+  },
+  customTimeButton: {
+    marginTop: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.gray100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  customTimeButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  customTimeButtonText: {
+    fontSize: typography.fontSizeMd,
+    fontWeight: typography.fontWeightSemibold,
+    color: colors.primary,
+  timerOptionDisabled: {
+    opacity: 0.5,
+  },
+  },
+  customTimeButtonTextActive: {
+    color: colors.white,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    width: '100%',
+    maxWidth: 400,
+    ...shadows.lg,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  modalTitle: {
+    fontSize: typography.fontSize2xl,
+    fontWeight: typography.fontWeightBold,
+    color: colors.gray900,
+    marginTop: spacing.sm,
+  },
+  modalDescription: {
+    fontSize: typography.fontSizeMd,
+    color: colors.gray600,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  modalInput: {
+    borderWidth: 2,
+    borderColor: colors.gray300,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    fontSize: typography.fontSizeLg,
+    color: colors.gray900,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.md,
+    gap: spacing.xs,
+  },
+  errorText: {
+    fontSize: typography.fontSizeSm,
+    color: colors.error,
+    fontWeight: typography.fontWeightMedium,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+  },
+  modalButtonCancel: {
+    backgroundColor: colors.gray200,
+  },
+  modalButtonConfirm: {
+    backgroundColor: colors.primary,
+  },
+  modalButtonTextCancel: {
+    fontSize: typography.fontSizeMd,
+    fontWeight: typography.fontWeightSemibold,
+    color: colors.gray700,
+  },
+  modalButtonTextConfirm: {
+    fontSize: typography.fontSizeMd,
+    fontWeight: typography.fontWeightSemibold,
+    color: colors.white,
   },
 });

@@ -82,53 +82,57 @@ export default function HomeScreen({ navigation }) {
         colors={['#6366f1', '#8b5cf6']}
         style={styles.gradient}
       >
-        {/* Header */}
-        <View style={styles.header}>
+        {/* Scrollable Content */}
+        <ScrollView 
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Header with Settings Button */}
+          <View style={styles.header}>
+            <Animated.View style={[styles.settingsButtonContainer, { opacity: fadeAnim }]}>
+              <TouchableOpacity
+                style={styles.settingsButton}
+                onPress={() => navigation.navigate('Settings')}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="settings-outline" size={20} color={colors.white} />
+              </TouchableOpacity>
+            </Animated.View>
+
+            <Animated.View 
+              style={[
+                styles.headerContent,
+                { 
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }]
+                }
+              ]}
+            >
+              <View style={styles.logoContainer}>
+                <View style={styles.iconWrapper}>
+                  <Ionicons name="flash" size={48} color={colors.white} />
+                </View>
+              </View>
+              <Text style={styles.title}>Action Reaction</Text>
+              <Text style={styles.subtitle}>
+                Hold your phone on your forehead{'\n'}Let others act it out!
+              </Text>
+            </Animated.View>
+          </View>
+
+          {/* Topics Section with White Background */}
           <Animated.View 
             style={[
-              styles.headerContent,
+              styles.topicsContainer,
               { 
                 opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }]
               }
             ]}
           >
-            <View style={styles.logoContainer}>
-              <View style={styles.iconWrapper}>
-                <Ionicons name="flash" size={48} color={colors.white} />
-              </View>
-            </View>
-            <Text style={styles.title}>Action Reaction</Text>
-            <Text style={styles.subtitle}>
-              Hold your phone on your forehead{'\n'}Let others act it out!
-            </Text>
-          </Animated.View>
-
-          {/* Settings Button */}
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <Button
-              title=""
-              icon={<Ionicons name="settings-outline" size={24} color={colors.white} />}
-              variant="ghost"
-              size="sm"
-              onPress={() => navigation.navigate('Settings')}
-              style={styles.settingsButton}
-            />
-          </Animated.View>
-        </View>
-
-        {/* Topics Section */}
-        <Animated.View 
-          style={[
-            styles.topicsContainer,
-            { 
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
-          {/* Mode Selection Tabs */}
-          <View style={styles.modeTabsContainer}>
+            {/* Mode Selection Tabs */}
+            <View style={styles.modeTabsContainer}>
             <TouchableOpacity
               style={[
                 styles.modeTab,
@@ -183,11 +187,7 @@ export default function HomeScreen({ navigation }) {
             </Text>
           </View>
 
-          <ScrollView 
-            style={styles.topicsList}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.topicsContent}
-          >
+          <View style={styles.topicsContent}>
             {selectedMode === 'multiplayer' ? (
               // Multiplayer Topics
               <>
@@ -262,8 +262,9 @@ export default function HomeScreen({ navigation }) {
                 </View>
               </>
             )}
-          </ScrollView>
-        </Animated.View>
+            </View>
+          </Animated.View>
+        </ScrollView>
       </LinearGradient>
     </View>
   );
@@ -276,6 +277,12 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     paddingTop: StatusBar.currentHeight || spacing.xl,
@@ -311,10 +318,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  settingsButton: {
+  settingsButtonContainer: {
     position: 'absolute',
-    top: StatusBar.currentHeight || spacing.xl,
-    right: spacing.lg,
+    top: spacing.xs,
+    right: 0,
+    zIndex: 10,
+  },
+  settingsButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.md,
   },
   topicsContainer: {
     flex: 1,
@@ -368,9 +385,6 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeMd,
     color: colors.gray600,
   },
-  topicsList: {
-    flex: 1,
-  },
   topicsContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
@@ -380,6 +394,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: spacing.lg,
+    marginBottom: spacing.xl,
     paddingVertical: spacing.lg,
     alignItems: 'center',
   },

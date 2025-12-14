@@ -14,6 +14,8 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Accelerometer } from 'expo-sensors';
 import * as Haptics from 'expo-haptics';
@@ -80,6 +82,38 @@ export default function GameScreen({ route, navigation }) {
   const lastAction = useRef(Date.now());
   const sensitivity = 0.7; // Adjusted for flip detection (lower value for z-axis)
   const isProcessing = useRef(false); // Add flag to prevent multiple triggers
+
+  // Load timer setting from AsyncStorage with validation and focus effect
+  useFocusEffect(
+    React.useCallback(() => {
+      async function loadTimer() {
+        try {
+          const savedTimer = await AsyncStorage.getItem('game_timer');
+          if (savedTimer) {
+            const timerValue = parseInt(savedTimer, 10);
+            
+            // Validate timer value (must be a number between 1 and 600 seconds)
+            if (!isNaN(timerValue) && timerValue >= 15 && timerValue <= 600) {
+              setTimeLeft(timerValue);
+            } else {
+              // Invalid value - fall back to default
+              console.warn('Invalid timer value from storage:', timerValue, '- using default 60s');
+              setTimeLeft(60);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading timer setting:', error);
+          // On error, use default value
+          setTimeLeft(60);
+        }
+      }
+      
+      // Only load timer if game hasn't started yet
+      if (!gameStarted) {
+        loadTimer();
+      }
+    }, [gameStarted])
+  );
 
   // Lock orientation based on mode
   useEffect(() => {
