@@ -26,6 +26,8 @@ export default function SettingsScreen({ navigation }) {
   });
   const [showCustomTimeModal, setShowCustomTimeModal] = useState(false);
   const [customTimeInput, setCustomTimeInput] = useState('');
+  const [customTimeError, setCustomTimeError] = useState('');
+  const [isSavingTimer, setIsSavingTimer] = useState(false);
 
   // Load saved timer setting on mount
   useEffect(() => {
@@ -45,25 +47,56 @@ export default function SettingsScreen({ navigation }) {
   };
 
   const updateSetting = async (key, value) => {
-    setSettings({ ...settings, [key]: value });
+    // Prevent concurrent timer modifications
+    if (key === 'timerDuration' && isSavingTimer) {
+      return;
+    }
+    
+    // Use functional update to avoid stale closure issues
+    setSettings(prevSettings => ({ ...prevSettings, [key]: value }));
     
     // Save timer duration to AsyncStorage
     if (key === 'timerDuration') {
+      setIsSavingTimer(true);
       try {
         await AsyncStorage.setItem('game_timer', value.toString());
       } catch (error) {
         console.error('Error saving timer setting:', error);
+      } finally {
+        setIsSavingTimer(false);
       }
     }
   };
 
   const handleCustomTime = async () => {
     const customTime = parseInt(customTimeInput, 10);
-    if (customTime && customTime > 0 && customTime <= 600) {
-      await updateSetting('timerDuration', customTime);
-      setShowCustomTimeModal(false);
-      setCustomTimeInput('');
+    
+    // Validate input and provide specific error messages
+    if (!customTimeInput.trim()) {
+      setCustomTimeError('Please enter a timer duration');
+      return;
     }
+    
+    if (isNaN(customTime)) {
+      setCustomTimeError('Please enter a valid number');
+      return;
+    }
+    
+    if (customTime < 15) {
+      setCustomTimeError('Timer must be at least 15 seconds');
+      return;
+    }
+    
+    if (customTime > 600) {
+      setCustomTimeError('Timer cannot exceed 600 seconds (10 minutes)');
+      return;
+    }
+    
+    // Valid input - close modal and save
+    setShowCustomTimeModal(false);
+    setCustomTimeInput('');
+    setCustomTimeError('');
+    await updateSetting('timerDuration', customTime);
   };
 
   const timerOptions = [30, 60, 90, 120];
@@ -125,8 +158,10 @@ export default function SettingsScreen({ navigation }) {
                     style={[
                       styles.timerOption,
                       settings.timerDuration === duration && styles.timerOptionActive,
+                      isSavingTimer && styles.timerOptionDisabled,
                     ]}
                     onPress={() => updateSetting('timerDuration', duration)}
+                    disabled={isSavingTimer}
                   >
                     <Text
                       style={[
@@ -143,8 +178,10 @@ export default function SettingsScreen({ navigation }) {
                 style={[
                   styles.customTimeButton,
                   !timerOptions.includes(settings.timerDuration) && styles.customTimeButtonActive,
+                  isSavingTimer && styles.timerOptionDisabled,
                 ]}
                 onPress={() => setShowCustomTimeModal(true)}
+                disabled={isSavingTimer}
               >
                 <Ionicons 
                   name="create-outline" 
@@ -306,13 +343,30 @@ export default function SettingsScreen({ navigation }) {
             </View>
             
             <Text style={styles.modalDescription}>
-              Enter duration in seconds (1-600)
+              Enter duration in seconds (15-600)
             </Text>
             
             <TextInput
               style={styles.modalInput}
               value={customTimeInput}
-              onChangeText={setCustomTimeInput}
+              onChangeText={(text) => {
+                setCustomTimeInput(text);
+                // Real-time validation as user types
+                if (text.trim() === '') {
+                  setCustomTimeError('');
+                } else {
+                  const value = parseInt(text, 10);
+                  if (isNaN(value)) {
+                    setCustomTimeError('Please enter a valid number');
+                  } else if (value < 15) {
+                    setCustomTimeError('Timer must be at least 15 seconds');
+                  } else if (value > 600) {
+                    setCustomTimeError('Timer cannot exceed 600 seconds (10 minutes)');
+                  } else {
+                    setCustomTimeError('');
+                  }
+                }
+              }}
               placeholder="e.g., 45"
               placeholderTextColor={colors.gray400}
               keyboardType="numeric"
@@ -320,12 +374,20 @@ export default function SettingsScreen({ navigation }) {
               autoFocus
             />
             
+            {customTimeError ? (
+              <View style={styles.errorContainer}>
+                <Ionicons name="warning" size={16} color={colors.error} />
+                <Text style={styles.errorText}>{customTimeError}</Text>
+              </View>
+            ) : null}
+            
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonCancel]}
                 onPress={() => {
                   setShowCustomTimeModal(false);
                   setCustomTimeInput('');
+                  setCustomTimeError('');
                 }}
               >
                 <Text style={styles.modalButtonTextCancel}>Cancel</Text>
@@ -522,6 +584,9 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeMd,
     fontWeight: typography.fontWeightSemibold,
     color: colors.primary,
+  timerOptionDisabled: {
+    opacity: 0.5,
+  },
   },
   customTimeButtonTextActive: {
     color: colors.white,
@@ -565,7 +630,23 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeLg,
     color: colors.gray900,
     textAlign: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.md,
+    gap: spacing.xs,
+  },
+  errorText: {
+    fontSize: typography.fontSizeSm,
+    color: colors.error,
+    fontWeight: typography.fontWeightMedium,
   },
   modalButtons: {
     flexDirection: 'row',

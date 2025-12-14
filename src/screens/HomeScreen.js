@@ -326,9 +326,9 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 25,
-    width: 30,
-    height: 30,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.md,
