@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StatusBar,
   Switch,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +26,37 @@ export default function SettingsScreen({ navigation }) {
     timerDuration: 60,
   });
 
+  const [notification, setNotification] = useState(null);
+  const [fadeAnim] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    if (notification) {
+      // Fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      // Auto hide after 3 seconds
+      const timer = setTimeout(() => {
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => setNotification(null));
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    const languageName = newLanguage === 'en' ? 'English' : 'Tamil (தமிழ்)';
+    setNotification(`Language changed to ${languageName}`);
+  };
+
   const updateSetting = (key, value) => {
     setSettings({ ...settings, [key]: value });
   };
@@ -34,6 +66,29 @@ export default function SettingsScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
+      
+      {/* In-app Notification */}
+      {notification && (
+        <Animated.View 
+          style={[
+            styles.notificationContainer,
+            { opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }] }
+          ]}
+        >
+          <LinearGradient
+            colors={[colors.success, '#059669']}
+            style={styles.notification}
+          >
+            <View style={styles.notificationIconContainer}>
+              <Ionicons name="checkmark-circle" size={24} color={colors.white} />
+            </View>
+            <View style={styles.notificationContent}>
+              <Text style={styles.notificationTitle}>Success!</Text>
+              <Text style={styles.notificationText}>{notification}</Text>
+            </View>
+          </LinearGradient>
+        </Animated.View>
+      )}
       
       {/* Header */}
       <LinearGradient
@@ -51,51 +106,32 @@ export default function SettingsScreen({ navigation }) {
           <View style={styles.headerIconContainer}>
             <Ionicons name="settings" size={32} color={colors.white} />
           </View>
-          <Text style={styles.headerTitle}>{t('settings', 'Settings')}</Text>
-          <Text style={styles.headerSubtitle}>{t('settingsLabels.selectLanguage', 'Customize your experience')}</Text>
+          <Text style={styles.headerTitle}>Settings</Text>
+          <Text style={styles.headerSubtitle}>Customize your experience</Text>
 
           {/* Inline language selector in header for immediate visibility */}
           <View style={styles.languageRow}>
             <TouchableOpacity
               style={[styles.languageButton, language === 'en' && styles.languageButtonActive]}
-              onPress={() => setLanguage('en')}
+              onPress={() => handleLanguageChange('en')}
             >
-              <Text style={[styles.languageButtonText, language === 'en' && styles.languageButtonTextActive]}> {t('labels.english', 'English')} </Text>
+              <Text style={[styles.languageButtonText, language === 'en' && styles.languageButtonTextActive]}>English</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.languageButton, language === 'ta' && styles.languageButtonActive]}
-              onPress={() => setLanguage('ta')}
+              onPress={() => handleLanguageChange('ta')}
             >
-              <Text style={[styles.languageButtonText, language === 'ta' && styles.languageButtonTextActive]}> {t('labels.tamil', 'தமிழ் (Tamil)')} </Text>
+              <Text style={[styles.languageButtonText, language === 'ta' && styles.languageButtonTextActive]}>தமிழ் (Tamil)</Text>
             </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
 
-      {/* Visible language selector card (guaranteed to be visible) */}
-      <View style={[styles.section, { paddingHorizontal: spacing.lg }]}> 
-        <View style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-          <TouchableOpacity
-            style={[styles.languageButton, language === 'en' && styles.languageButtonActive]}
-            onPress={() => setLanguage('en')}
-          >
-            <Text style={[styles.languageButtonText, language === 'en' && styles.languageButtonTextActive]}>{t('labels.english', 'English')}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.languageButton, language === 'ta' && styles.languageButtonActive]}
-            onPress={() => setLanguage('ta')}
-          >
-            <Text style={[styles.languageButtonText, language === 'ta' && styles.languageButtonTextActive]}>{t('labels.tamil', 'தமிழ் (Tamil)')}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Game Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settingsLabels.difficulty', 'Game Settings')}</Text>
+          <Text style={styles.sectionTitle}>Game Settings</Text>
           
           <View style={styles.card}>
             <View style={styles.settingItem}>
@@ -164,7 +200,7 @@ export default function SettingsScreen({ navigation }) {
 
         {/* Feedback Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settingsLabels.soundEffects', 'Feedback')}</Text>
+          <Text style={styles.sectionTitle}>Feedback</Text>
           
           <View style={styles.card}>
             <View style={styles.settingItem}>
@@ -228,30 +264,9 @@ export default function SettingsScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Action Buttons */}
-        {/* Language Selector */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settingsLabels.language', 'Language')}</Text>
-          <View style={[styles.card, { flexDirection: 'row', justifyContent: 'space-between' }]}>
-            <TouchableOpacity
-              style={[styles.timerOption, language === 'en' && styles.timerOptionActive]}
-              onPress={() => setLanguage('en')}
-            >
-              <Text style={[styles.timerOptionText, language === 'en' && styles.timerOptionTextActive]}>{t('labels.english', 'English')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.timerOption, language === 'ta' && styles.timerOptionActive]}
-              onPress={() => setLanguage('ta')}
-            >
-              <Text style={[styles.timerOptionText, language === 'ta' && styles.timerOptionTextActive]}>{t('labels.tamil', 'தமிழ் (Tamil)')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         <View style={styles.section}>
           <Button
-            title={t('labels.backToHome', 'Back to Home')}
+            title="Back to Home"
             onPress={() => navigation.navigate('Home')}
             gradient={[colors.primary, colors.primaryDark]}
             icon={<Ionicons name="home" size={20} color={colors.white} />}
@@ -433,5 +448,43 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeSm,
     color: colors.gray600,
     lineHeight: 20,
+  },
+  notificationContainer: {
+    position: 'absolute',
+    top: StatusBar.currentHeight ? StatusBar.currentHeight + spacing.md : spacing.xl,
+    left: spacing.lg,
+    right: spacing.lg,
+    zIndex: 1000,
+  },
+  notification: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    ...shadows.xl,
+    elevation: 8,
+  },
+  notificationIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationTitle: {
+    color: colors.white,
+    fontSize: typography.fontSizeLg,
+    fontWeight: typography.fontWeightBold,
+    marginBottom: spacing.xs,
+  },
+  notificationText: {
+    color: 'rgba(255, 255, 255, 0.95)',
+    fontSize: typography.fontSizeSm,
+    fontWeight: typography.fontWeightMedium,
   },
 });
