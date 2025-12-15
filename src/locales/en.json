@@ -1,0 +1,55 @@
+{
+  "home": "Home",
+  "game": "Game",
+  "scoreboard": "Scoreboard",
+  "settings": "Settings",
+  "selectTopic": "Select a Topic",
+  "startGame": "Start Game",
+  "correct": "Correct",
+  "pass": "Pass",
+  "timeLeft": "seconds",
+  "flipDown": "Flip Down",
+  "flipUp": "Flip Up",
+  "getReady": "Get Ready!",
+  "timesUp": "Time's Up!",
+  "roundComplete": "Round Complete!",
+  "correctAnswers": "Correct Answers",
+  "accuracy": "Accuracy",
+  "playAgain": "Play Again",
+  "changeTopic": "Change Topic",
+  "topics": {
+    "food": "Food",
+    "sports": "Sports",
+    "movies": "Movies",
+    "animals": "Animals",
+    "places": "Places",
+    "general": "General"
+  },
+  "messages": {
+    "amazing": "Amazing!",
+    "greatJob": "Great job!",
+    "goodWork": "Good work!",
+    "keepPracticing": "Keep practicing!"
+  },
+  "settingsLabels": {
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "difficulty": "Difficulty",
+    "soundEffects": "Sound Effects",
+    "vibration": "Vibration",
+    "timerDuration": "Timer Duration",
+    "flipSensitivity": "Flip Sensitivity",
+    "soundEffectsLabel": "Sound Effects",
+    "hapticFeedback": "Haptic Feedback"
+  },
+  "about": {
+    "version": "Version",
+    "builtWith": "Built With",
+    "howToPlay": "How to Play"
+  },
+  "labels": {
+    "english": "English",
+    "tamil": "தமிழ் (Tamil)",
+    "backToHome": "Back to Home"
+  }
+}

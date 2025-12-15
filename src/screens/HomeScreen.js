@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button, TopicCard } from '../components/CommonComponents';
 import { colors, typography, spacing, borderRadius, shadows, topicConfig } from '../theme';
 import { getAllTopics, getWordCount } from '../data/words';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,7 +42,8 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate('Game', { topic, mode: selectedMode });
   };
 
-  const topics = getAllTopics();
+  const { language } = useLanguage();
+  const topics = getAllTopics(language);
 
   // Single player game modes
   const singlePlayerModes = [
@@ -174,6 +176,8 @@ export default function HomeScreen({ navigation }) {
                 Single Player
               </Text>
             </TouchableOpacity>
+
+            
           </View>
 
           <View style={styles.topicsHeader}>
@@ -213,7 +217,7 @@ export default function HomeScreen({ navigation }) {
                 {/* Footer */}
                 <View style={styles.footer}>
                   <Text style={styles.footerText}>
-                    🎮 {topics.reduce((sum, topic) => sum + getWordCount(topic), 0)}+ words across {topics.length} categories
+                    🎮 {topics.reduce((sum, topic) => sum + getWordCount(topic, language), 0)}+ words across {topics.length} categories
                   </Text>
                 </View>
               </>
@@ -333,6 +337,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...shadows.md,
   },
+  settingsButtonContainer: {
+    position: 'absolute',
+    top: spacing.xs,
+    right: 0,
+    zIndex: 10,
+  },
   topicsContainer: {
     flex: 1,
     backgroundColor: colors.white,
@@ -370,6 +380,18 @@ const styles = StyleSheet.create({
   },
   modeTabTextActive: {
     color: colors.white,
+  },
+  modeTabSettings: {
+    width: 110,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+    gap: spacing.xs,
+    marginLeft: spacing.xs,
+    backgroundColor: 'transparent',
   },
   topicsHeader: {
     paddingHorizontal: spacing.lg,
@@ -437,4 +459,8 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 18,
   },
+
 });
+
+
+
