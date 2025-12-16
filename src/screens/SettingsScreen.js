@@ -9,15 +9,19 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  Animated,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { Button } from '../components/CommonComponents';
+import { useLanguage } from '../contexts/LanguageContext';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
 export default function SettingsScreen({ navigation }) {
+  const { t, language, setLanguage } = useLanguage();
+
   const [settings, setSettings] = useState({
     soundEnabled: true,
     vibrationEnabled: true,
@@ -68,6 +72,38 @@ export default function SettingsScreen({ navigation }) {
     }
   };
 
+  // Notification state for language changes
+  const [notification, setNotification] = useState(null);
+  const [fadeAnim] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    if (notification) {
+      // Fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      // Auto hide after 3 seconds
+      const timer = setTimeout(() => {
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => setNotification(null));
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    const languageName = newLanguage === 'en' ? 'English' : 'Tamil (தமிழ்)';
+    setNotification(`Language changed to ${languageName}`);
+  };
+
   const handleCustomTime = async () => {
     const customTime = parseInt(customTimeInput, 10);
     
@@ -105,6 +141,30 @@ export default function SettingsScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       
+      {/* In-app Notification */}
+      {notification && (
+        <Animated.View 
+          style={[
+            styles.notificationContainer,
+            { opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }] }
+          ]}
+        >
+          <LinearGradient
+            colors={[colors.success, '#059669']}
+            style={styles.notification}
+          >
+            <View style={styles.notificationIconContainer}>
+              <Ionicons name="checkmark-circle" size={24} color={colors.white} />
+            </View>
+            <View style={styles.notificationContent}>
+              <Text style={styles.notificationTitle}>Success!</Text>
+              <Text style={styles.notificationText}>{notification}</Text>
+            </View>
+          </LinearGradient>
+        </Animated.View>
+      )}
+      
+      {/* Header */}
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
         style={styles.gradient}
@@ -134,12 +194,33 @@ export default function SettingsScreen({ navigation }) {
 
           {/* Settings Content */}
           <View style={styles.settingsContainer}>
-        {/* Game Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Game Settings</Text>
+            {/* Language Settings */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Language</Text>
+              
+              <View style={styles.languageRow}>
+                <TouchableOpacity
+                  style={[styles.languageButton, language === 'en' && styles.languageButtonActive]}
+                  onPress={() => handleLanguageChange('en')}
+                >
+                  <Text style={[styles.languageButtonText, language === 'en' && styles.languageButtonTextActive]}>English</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.languageButton, language === 'ta' && styles.languageButtonActive]}
+                  onPress={() => handleLanguageChange('ta')}
+                >
+                  <Text style={[styles.languageButtonText, language === 'ta' && styles.languageButtonTextActive]}>தமிழ் (Tamil)</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Game Settings */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Game Settings</Text>
           
-          <View style={styles.card}>
-            <View style={styles.settingItem}>
+              <View style={styles.card}>
+                <View style={styles.settingItem}>
               <View style={styles.settingInfo}>
                 <View style={[styles.settingIcon, { backgroundColor: colors.primary }]}>
                   <Ionicons name="time-outline" size={20} color={colors.white} />
@@ -279,31 +360,11 @@ export default function SettingsScreen({ navigation }) {
           </View>
         </View>
 
-        {/* About Section */}
+        {/* How to Play Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={styles.sectionTitle}>How to Play</Text>
           
           <View style={styles.card}>
-            <View style={styles.aboutItem}>
-              <Ionicons name="information-circle" size={24} color={colors.primary} />
-              <View style={styles.aboutText}>
-                <Text style={styles.aboutLabel}>Version</Text>
-                <Text style={styles.aboutValue}>1.0.0</Text>
-              </View>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.aboutItem}>
-              <Ionicons name="code-slash" size={24} color={colors.primary} />
-              <View style={styles.aboutText}>
-                <Text style={styles.aboutLabel}>Built With</Text>
-                <Text style={styles.aboutValue}>React Native & Expo</Text>
-              </View>
-            </View>
-
-            <View style={styles.divider} />
-
             <View style={styles.aboutItem}>
               <Ionicons name="bulb" size={24} color={colors.primary} />
               <View style={styles.aboutText}>
@@ -316,7 +377,6 @@ export default function SettingsScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Action Buttons */}
         <View style={styles.section}>
           <Button
             title="Back to Home"
@@ -326,7 +386,8 @@ export default function SettingsScreen({ navigation }) {
           />
         </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
 
       {/* Custom Time Modal */}
       <Modal
@@ -403,7 +464,6 @@ export default function SettingsScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-      </LinearGradient>
     </View>
   );
 }
@@ -474,6 +534,32 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeightBold,
     color: colors.gray900,
     marginBottom: spacing.md,
+  },
+  languageRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  languageButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.gray100,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.gray200,
+  },
+  languageButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  languageButtonText: {
+    color: colors.gray700,
+    fontSize: typography.fontSizeMd,
+    fontWeight: typography.fontWeightSemibold,
+  },
+  languageButtonTextActive: {
+    color: colors.white,
   },
   card: {
     backgroundColor: colors.white,
@@ -584,9 +670,9 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeMd,
     fontWeight: typography.fontWeightSemibold,
     color: colors.primary,
+  },
   timerOptionDisabled: {
     opacity: 0.5,
-  },
   },
   customTimeButtonTextActive: {
     color: colors.white,
@@ -673,5 +759,43 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizeMd,
     fontWeight: typography.fontWeightSemibold,
     color: colors.white,
+  },
+  notificationContainer: {
+    position: 'absolute',
+    top: StatusBar.currentHeight ? StatusBar.currentHeight + spacing.md : spacing.xl,
+    left: spacing.lg,
+    right: spacing.lg,
+    zIndex: 1000,
+  },
+  notification: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    ...shadows.xl,
+    elevation: 8,
+  },
+  notificationIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationTitle: {
+    color: colors.white,
+    fontSize: typography.fontSizeLg,
+    fontWeight: typography.fontWeightBold,
+    marginBottom: spacing.xs,
+  },
+  notificationText: {
+    color: 'rgba(255, 255, 255, 0.95)',
+    fontSize: typography.fontSizeSm,
+    fontWeight: typography.fontWeightMedium,
   },
 });

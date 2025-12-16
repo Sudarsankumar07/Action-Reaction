@@ -23,6 +23,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, topicConfig, borderRadius } from '../theme';
 import { getRandomWord } from '../data/words';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   generateHints, 
   scrambleWord, 
@@ -38,6 +39,8 @@ const isWeb = Platform.OS === 'web';
 export default function GameScreen({ route, navigation }) {
   const { topic, mode = 'multiplayer' } = route.params;
   const config = topicConfig[topic];
+
+  const { language } = useLanguage();
 
   // Game state
   const [currentWord, setCurrentWord] = useState('');
@@ -223,7 +226,7 @@ export default function GameScreen({ route, navigation }) {
     
     for (let i = 0; i < wordCount; i++) {
       // Pass combined list (usedWords + tempUsed) to avoid any duplicates
-      const word = getRandomWord(topic, [...usedWords, ...tempUsed]);
+      const word = getRandomWord(topic, [...usedWords, ...tempUsed], language);
       if (word) {
         words.push(word);
         tempUsed.push(word);
@@ -272,7 +275,7 @@ export default function GameScreen({ route, navigation }) {
 
   const loadNextWord = async () => {
     // Get the next word first
-    const word = getRandomWord(topic, usedWords);
+    const word = getRandomWord(topic, usedWords, language);
     
     if (!word) {
       // No more words available
