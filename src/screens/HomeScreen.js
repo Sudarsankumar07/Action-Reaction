@@ -337,12 +337,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...shadows.md,
   },
-  settingsButtonContainer: {
-    position: 'absolute',
-    top: spacing.lg,
-    right: spacing.md,
-    zIndex: 10,
-  },
   topicsContainer: {
     flex: 1,
     backgroundColor: colors.white,
