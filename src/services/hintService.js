@@ -15,15 +15,18 @@ class HintService {
   async isOnline() {
     try {
       const netState = await NetInfo.fetch();
+      console.log('🌐 NetInfo state:', JSON.stringify(netState));
+      console.log('🔑 API Key available:', !!groqService.apiKey, 'Length:', groqService.apiKey?.length || 0);
       
-      // Explicitly handle null/undefined as offline (some platforms may return null)
+      // On web platform, isInternetReachable is often null - fall back to isConnected
       if (netState.isInternetReachable === null || netState.isInternetReachable === undefined) {
-        return false;
+        console.log('⚠️ NetInfo isInternetReachable is null (web platform), using isConnected:', netState.isConnected);
+        return netState.isConnected;
       }
       
       return netState.isConnected && netState.isInternetReachable;
     } catch (error) {
-      console.log('Network check failed, assuming offline');
+      console.log('Network check failed, assuming offline:', error);
       return false;
     }
   }
