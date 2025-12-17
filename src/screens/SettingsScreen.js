@@ -35,18 +35,28 @@ export default function SettingsScreen({ navigation }) {
 
   // Load saved timer setting on mount
   useEffect(() => {
-    loadTimerSetting();
+    loadSettings();
   }, []);
 
-  const loadTimerSetting = async () => {
+  const loadSettings = async () => {
     try {
       const savedTimer = await AsyncStorage.getItem('game_timer');
+      const savedSound = await AsyncStorage.getItem('sound_enabled');
+      
+      const newSettings = { ...settings };
+      
       if (savedTimer) {
         const timerValue = parseInt(savedTimer, 10);
-        setSettings(prev => ({ ...prev, timerDuration: timerValue }));
+        newSettings.timerDuration = timerValue;
       }
+      
+      if (savedSound !== null) {
+        newSettings.soundEnabled = savedSound === 'true';
+      }
+      
+      setSettings(newSettings);
     } catch (error) {
-      console.error('Error loading timer setting:', error);
+      console.error('Error loading settings:', error);
     }
   };
 
@@ -59,14 +69,18 @@ export default function SettingsScreen({ navigation }) {
     // Use functional update to avoid stale closure issues
     setSettings(prevSettings => ({ ...prevSettings, [key]: value }));
     
-    // Save timer duration to AsyncStorage
-    if (key === 'timerDuration') {
-      setIsSavingTimer(true);
-      try {
+    // Save settings to AsyncStorage
+    try {
+      if (key === 'timerDuration') {
+        setIsSavingTimer(true);
         await AsyncStorage.setItem('game_timer', value.toString());
-      } catch (error) {
-        console.error('Error saving timer setting:', error);
-      } finally {
+        setIsSavingTimer(false);
+      } else if (key === 'soundEnabled') {
+        await AsyncStorage.setItem('sound_enabled', value.toString());
+      }
+    } catch (error) {
+      console.error('Error saving setting:', error);
+      if (key === 'timerDuration') {
         setIsSavingTimer(false);
       }
     }

@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Accelerometer } from 'expo-sensors';
 import * as Haptics from 'expo-haptics';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, topicConfig, borderRadius } from '../theme';
 import { getRandomWord } from '../data/words';
@@ -79,6 +80,10 @@ export default function GameScreen({ route, navigation }) {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const feedbackAnim = useRef(new Animated.Value(0)).current;
   const [feedbackType, setFeedbackType] = useState(null);
+
+  // Background music
+  const backgroundMusic = useRef(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Accelerometer state
   const [subscription, setSubscription] = useState(null);
@@ -144,6 +149,83 @@ export default function GameScreen({ route, navigation }) {
       }
     };
   }, [mode]);
+
+  // Load sound settings from AsyncStorage
+  useEffect(() => {
+    async function loadSoundSetting() {
+      try {
+        const savedSound = await AsyncStorage.getItem('sound_enabled');
+        if (savedSound !== null) {
+          setSoundEnabled(savedSound === 'true');
+        }
+      } catch (error) {
+        console.error('Error loading sound setting:', error);
+      }
+    }
+    loadSoundSetting();
+  }, []);
+
+  // Load and play background music for multiplayer mode
+  useEffect(() => {
+    async function setupAudio() {
+      if (mode === 'multiplayer') {
+        try {
+          // Set audio mode
+          await Audio.setAudioModeAsync({
+            playsInSilentModeIOS: true,
+            staysActiveInBackground: false,
+            shouldDuckAndroid: true,
+          });
+
+          // Load the background music
+          const { sound } = await Audio.Sound.createAsync(
+            { uri: 'https://www.bensound.com/bensound-music/bensound-dance.mp3' },
+            { shouldPlay: false, isLooping: true, volume: 0.3 }
+          );
+          
+          backgroundMusic.current = sound;
+
+          // Play music when game starts and sound is enabled
+          if (gameStarted && soundEnabled) {
+            await sound.playAsync();
+          }
+        } catch (error) {
+          console.error('Error loading background music:', error);
+        }
+      }
+    }
+
+    setupAudio();
+
+    // Cleanup function
+    return () => {
+      if (backgroundMusic.current) {
+        backgroundMusic.current.unloadAsync();
+      }
+    };
+  }, [mode]);
+
+  // Control music playback based on game state and sound settings
+  useEffect(() => {
+    async function controlMusic() {
+      if (backgroundMusic.current && mode === 'multiplayer') {
+        try {
+          if (gameStarted && !gameEnded && soundEnabled) {
+            await backgroundMusic.current.playAsync();
+          } else {
+            await backgroundMusic.current.pauseAsync();
+          }
+          
+          if (gameEnded) {
+            await backgroundMusic.current.stopAsync();
+          }
+        } catch (error) {
+          console.error('Error controlling music:', error);
+        }
+      }
+    }
+    controlMusic();
+  }, [gameStarted, gameEnded, soundEnabled, mode]);
 
   useEffect(() => {
     // Start countdown
