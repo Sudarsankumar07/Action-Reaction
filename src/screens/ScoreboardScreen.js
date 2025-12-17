@@ -163,7 +163,7 @@ export default function ScoreboardScreen({ route, navigation }) {
             title="Play Again"
             onPress={() => navigation.replace('Game', { topic, mode })}
             gradient={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)']}
-            style={styles.button}
+            style={[styles.button, { marginTop: spacing.xl }]}
             icon={<Ionicons name="refresh" size={24} color={colors.white} />}
           />
           

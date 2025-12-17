@@ -345,10 +345,10 @@ export default function GameScreen({ route, navigation }) {
   // Auto-show hints for AI Hints mode
   useEffect(() => {
     if (mode === 'ai-hints' && gameStarted && !gameEnded && currentWord && hintsShown < 4) {
-      const hintTimings = [3000, 8000, 13000, 18000]; // 3s, 8s, 13s, 18s (faster progression)
+      // Each hint shows 3 seconds after the previous one
       const timer = setTimeout(() => {
         setHintsShown(prev => prev + 1);
-      }, hintTimings[hintsShown]);
+      }, 4000); // 3 seconds delay for each hint
       
       return () => clearTimeout(timer);
     }
