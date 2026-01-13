@@ -29,10 +29,13 @@ import {
   generateHints, 
   scrambleWord, 
   generateBlanksPattern, 
-  emojiHints, 
+  emojiHints,
+  tamilEmojiHints,
+  getEmojiForWord,
   calculateScore 
 } from '../data/hints';
 import hintService from '../services/hintService';
+import TamilKeyboard from '../components/TamilKeyboard';
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -383,13 +386,13 @@ export default function GameScreen({ route, navigation }) {
     if (mode === 'ai-hints') {
       setLoadingHints(true);
       try {
-        const hints = await hintService.getHints(word, topic);
+        const hints = await hintService.getHints(word, topic, true, language);
         setCurrentHints(hints);
         console.log('Loaded AI hints:', hints);
       } catch (error) {
         console.error('Error loading hints:', error);
         // Fallback to static hints
-        const fallbackHints = generateHints(word, topic);
+        const fallbackHints = generateHints(word, topic, language);
         setCurrentHints(fallbackHints);
       } finally {
         setLoadingHints(false);
@@ -917,8 +920,10 @@ export default function GameScreen({ route, navigation }) {
             </View>
           ) : mode === 'time-attack' && displayPattern === 'emoji' ? (
             <View style={styles.timeAttackContainer}>
-              <Text style={styles.emojiHint}>{emojiHints[currentWord] || '❓'}</Text>
-              <Text style={styles.modeLabel}>What word does this emoji represent?</Text>
+              <Text style={styles.emojiHint}>{getEmojiForWord(currentWord, language)}</Text>
+              <Text style={styles.modeLabel}>
+                {language === 'ta' ? 'இந்த எமோஜி என்ன வார்த்தையைக் குறிக்கிறது?' : 'What word does this emoji represent?'}
+              </Text>
             </View>
           ) : mode === 'time-attack' && displayPattern === 'blanks' ? (
             <View style={styles.timeAttackContainer}>
@@ -949,50 +954,83 @@ export default function GameScreen({ route, navigation }) {
             </View>
           )}
           
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.input}
-              value={userAnswer}
-              onChangeText={setUserAnswer}
-              placeholder="Type your answer..."
-              placeholderTextColor="rgba(255,255,255,0.5)"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="done"
-              onSubmitEditing={handleSubmitAnswer}
-              editable={!showAnswer}
-            />
-            <TouchableOpacity 
-              style={styles.submitButton}
-              onPress={handleSubmitAnswer}
-              disabled={!userAnswer.trim() || showAnswer}
-            >
-              <Ionicons name="checkmark-circle" size={32} color={colors.white} />
-            </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.skipButton}
-            onPress={() => {
-              // Memory game: finish recall and show results
-              if (mode === 'memory' && memoryPhase === 'recall') {
-                showMemoryResults(memoryCorrectWords.length);
-                return;
-              }
+          {/* Tamil Keyboard - shown when Tamil language is selected */}
+          {language === 'ta' ? (
+            <>
+              <TamilKeyboard
+                value={userAnswer}
+                onChange={setUserAnswer}
+                onSubmit={handleSubmitAnswer}
+                visible={!showAnswer}
+                showInput={true}
+                placeholder="தட்டச்சு செய்யவும்..."
+                disabled={showAnswer}
+              />
+              <TouchableOpacity 
+                style={styles.skipButton}
+                onPress={() => {
+                  if (mode === 'memory' && memoryPhase === 'recall') {
+                    showMemoryResults(memoryCorrectWords.length);
+                    return;
+                  }
+                  setShowAnswer(true);
+                  showFeedback('pass');
+                  setPassed(prev => prev + 1);
+                  passedRef.current = passedRef.current + 1;
+                  if (mode === 'time-attack') setCombo(0);
+                  setTimeout(() => loadNextWord(), 2000);
+                }}
+              >
+                <Text style={styles.skipButtonText}>
+                  {mode === 'memory' && memoryPhase === 'recall' ? 'முடித்து மதிப்பெண்' : 'தவிர்'}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={userAnswer}
+                  onChangeText={setUserAnswer}
+                  placeholder="Type your answer..."
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  onSubmitEditing={handleSubmitAnswer}
+                  editable={!showAnswer}
+                />
+                <TouchableOpacity 
+                  style={styles.submitButton}
+                  onPress={handleSubmitAnswer}
+                  disabled={!userAnswer.trim() || showAnswer}
+                >
+                  <Ionicons name="checkmark-circle" size={32} color={colors.white} />
+                </TouchableOpacity>
+              </View>
               
-              // Other modes: skip to next word
-              setShowAnswer(true);
-              showFeedback('pass');
-              setPassed(prev => prev + 1);
-              passedRef.current = passedRef.current + 1;
-              if (mode === 'time-attack') setCombo(0);
-              setTimeout(() => loadNextWord(), 2000);
-            }}
-          >
-            <Text style={styles.skipButtonText}>
-              {mode === 'memory' && memoryPhase === 'recall' ? 'Finish & Score' : 'Skip'}
-            </Text>
-          </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.skipButton}
+                onPress={() => {
+                  if (mode === 'memory' && memoryPhase === 'recall') {
+                    showMemoryResults(memoryCorrectWords.length);
+                    return;
+                  }
+                  setShowAnswer(true);
+                  showFeedback('pass');
+                  setPassed(prev => prev + 1);
+                  passedRef.current = passedRef.current + 1;
+                  if (mode === 'time-attack') setCombo(0);
+                  setTimeout(() => loadNextWord(), 2000);
+                }}
+              >
+                <Text style={styles.skipButtonText}>
+                  {mode === 'memory' && memoryPhase === 'recall' ? 'Finish & Score' : 'Skip'}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       )}
 

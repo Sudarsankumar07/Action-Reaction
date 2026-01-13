@@ -36,12 +36,13 @@ class HintService {
    * @param {string} word - The word to get hints for
    * @param {string} topic - The topic/category
    * @param {boolean} useAI - Whether to use AI or static hints
+   * @param {string} language - Language code ('en' or 'ta')
    * @returns {Promise<Array<string>>} Array of hints
    */
-  async getHints(word, topic, useAI = true) {
+  async getHints(word, topic, useAI = true, language = 'en') {
     if (!useAI) {
       // Use static hints
-      return generateStaticHints(word, topic);
+      return generateStaticHints(word, topic, language);
     }
 
     try {
@@ -49,52 +50,52 @@ class HintService {
       
       if (online) {
         // ONLINE MODE: Always generate fresh hints from AI
-        console.log('🌐 Online: Generating fresh AI hints for:', word);
+        console.log('🌐 Online: Generating fresh AI hints for:', word, 'in language:', language);
         
         try {
-          const aiHints = await groqService.generateHints(word, topic, 'medium');
+          const aiHints = await groqService.generateHints(word, topic, 'medium', language);
           
           // Cache the hints for offline use later
-          await this.cacheHints(word, topic, aiHints);
+          await this.cacheHints(word, topic, aiHints, language);
           
           return aiHints;
         } catch (error) {
           console.error('Error generating AI hints online:', error);
           // If API fails online, try cache then static fallback
-          const cachedHints = await this.getCachedHints(word, topic);
+          const cachedHints = await this.getCachedHints(word, topic, language);
           if (cachedHints) {
             console.log('📦 Using cached hints as fallback');
             return cachedHints;
           }
           console.log('⚡ Using static hints as final fallback');
-          return generateStaticHints(word, topic);
+          return generateStaticHints(word, topic, language);
         }
       } else {
         // OFFLINE MODE: Use cached hints only
         console.log('📴 Offline: Checking cache for:', word);
-        const cachedHints = await this.getCachedHints(word, topic);
+        const cachedHints = await this.getCachedHints(word, topic, language);
         
         if (cachedHints) {
           console.log('📦 Using cached AI hints (offline)');
           return cachedHints;
         } else {
           console.log('⚡ No cache available, using static hints (offline)');
-          return generateStaticHints(word, topic);
+          return generateStaticHints(word, topic, language);
         }
       }
     } catch (error) {
       console.error('Error getting AI hints:', error);
       // Fallback to static hints
-      return generateStaticHints(word, topic);
+      return generateStaticHints(word, topic, language);
     }
   }
 
   /**
    * Get cached hints if available and not expired
    */
-  async getCachedHints(word, topic) {
+  async getCachedHints(word, topic, language = 'en') {
     try {
-      const key = this.getCacheKey(word, topic);
+      const key = this.getCacheKey(word, topic, language);
       const cached = await AsyncStorage.getItem(key);
       
       if (cached) {
@@ -119,13 +120,14 @@ class HintService {
   /**
    * Cache hints for a word
    */
-  async cacheHints(word, topic, hints) {
+  async cacheHints(word, topic, hints, language = 'en') {
     try {
-      const key = this.getCacheKey(word, topic);
+      const key = this.getCacheKey(word, topic, language);
       const data = {
         word,
         topic,
         hints,
+        language,
         timestamp: Date.now(),
       };
       
@@ -138,8 +140,8 @@ class HintService {
   /**
    * Generate cache key
    */
-  getCacheKey(word, topic) {
-    return `${this.cachePrefix}${topic}_${word.toLowerCase()}`;
+  getCacheKey(word, topic, language = 'en') {
+    return `${this.cachePrefix}${language}_${topic}_${word.toLowerCase()}`;
   }
 
   /**
