@@ -118,7 +118,7 @@ export default function HomeScreen({ navigation }) {
               </View>
               <Text style={styles.title}>Action Reaction</Text>
               <Text style={styles.subtitle}>
-                Hold your phone on your forehead{'\n'}Let others act it out!
+                Hold your phone on your forehead{'\n'}Let others act it out!{'\n'}Charades 
               </Text>
             </Animated.View>
           </View>
