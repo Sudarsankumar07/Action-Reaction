@@ -6,23 +6,23 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // Row 1 has 13 keys (vowels + aytham), which is the most keys in a row
 const MAX_KEYS_IN_ROW = 13;
 const HORIZONTAL_PADDING = 8; // Total padding on sides
-const KEY_MARGIN = 2; // Margin on each side of key
+const KEY_MARGIN = 1.5; // Reduced margin on each side of key
 const TOTAL_KEY_MARGINS = MAX_KEYS_IN_ROW * (KEY_MARGIN * 2);
 const AVAILABLE_WIDTH = SCREEN_WIDTH - HORIZONTAL_PADDING - TOTAL_KEY_MARGINS;
 const CALCULATED_KEY_WIDTH = Math.floor(AVAILABLE_WIDTH / MAX_KEYS_IN_ROW);
 
 // Responsive key sizing - ensures keys fit on screen
 const getKeySize = () => {
-  const baseWidth = Math.min(CALCULATED_KEY_WIDTH, 28); // Cap at 28 for larger screens
-  const minWidth = 22; // Minimum readable size
+  const baseWidth = Math.min(CALCULATED_KEY_WIDTH, 26); // Reduced cap for better fit
+  const minWidth = 20; // Minimum readable size
   const keyWidth = Math.max(baseWidth, minWidth);
-  
+
   if (SCREEN_WIDTH < 360) {
-    return { width: Math.max(keyWidth - 2, 20), height: 38, fontSize: 16 };
+    return { width: Math.max(keyWidth - 2, 18), height: 36, fontSize: 15 };
   } else if (SCREEN_WIDTH < 400) {
-    return { width: keyWidth, height: 40, fontSize: 17 };
+    return { width: keyWidth, height: 38, fontSize: 16 };
   } else {
-    return { width: Math.min(keyWidth + 2, 28), height: 42, fontSize: 18 };
+    return { width: Math.min(keyWidth + 1, 26), height: 40, fontSize: 17 };
   }
 };
 
@@ -32,14 +32,14 @@ const keySize = getKeySize();
 export const KEYBOARD_COLORS = {
   // Background
   keyboardBackground: '#1a1a2e',
-  
+
   // Input display
   inputBackground: '#0d0d1a',
   inputText: '#FFFFFF',
   inputBorder: '#00FFC5',
   inputPlaceholder: '#666666',
   cursor: '#00FFC5',
-  
+
   // Key types
   vowel: {
     background: '#1a1a40',
@@ -100,7 +100,7 @@ export const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  
+
   // Input display area
   inputContainer: {
     flexDirection: 'row',
@@ -139,13 +139,13 @@ export const styles = StyleSheet.create({
     backgroundColor: KEYBOARD_COLORS.cursor,
     marginLeft: 2,
   },
-  
+
   // Keyboard rows
   row: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 3,
     paddingHorizontal: 2,
     flexWrap: 'nowrap',
   },
@@ -153,11 +153,12 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 6,
-    paddingHorizontal: 6,
+    marginTop: 4,
+    paddingHorizontal: 4,
+    gap: 4,
     flexWrap: 'nowrap',
   },
-  
+
   // Individual key styles
   key: {
     width: keySize.width,
@@ -177,11 +178,11 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: Platform.select({
       ios: 'Tamil Sangam MN',
-      android: 'NotoSansTamil-Regular', 
+      android: 'NotoSansTamil-Regular',
       default: 'sans-serif',
     }),
   },
-  
+
   // Key type specific styles
   vowelKey: {
     backgroundColor: KEYBOARD_COLORS.vowel.background,
@@ -192,7 +193,7 @@ export const styles = StyleSheet.create({
   vowelKeyText: {
     color: KEYBOARD_COLORS.vowel.text,
   },
-  
+
   consonantKey: {
     backgroundColor: KEYBOARD_COLORS.consonant.background,
   },
@@ -202,7 +203,7 @@ export const styles = StyleSheet.create({
   consonantKeyText: {
     color: KEYBOARD_COLORS.consonant.text,
   },
-  
+
   vowelSignKey: {
     backgroundColor: KEYBOARD_COLORS.vowelSign.background,
   },
@@ -212,7 +213,7 @@ export const styles = StyleSheet.create({
   vowelSignKeyText: {
     color: KEYBOARD_COLORS.vowelSign.text,
   },
-  
+
   specialKey: {
     backgroundColor: KEYBOARD_COLORS.special.background,
   },
@@ -222,69 +223,69 @@ export const styles = StyleSheet.create({
   specialKeyText: {
     color: KEYBOARD_COLORS.special.text,
   },
-  
+
   // Action keys
   spaceKey: {
     backgroundColor: KEYBOARD_COLORS.space.background,
-    width: SCREEN_WIDTH * 0.25,
-    minWidth: SCREEN_WIDTH * 0.25,
-    maxWidth: SCREEN_WIDTH * 0.25,
-    paddingHorizontal: 8,
+    width: SCREEN_WIDTH * 0.22,
+    minWidth: SCREEN_WIDTH * 0.22,
+    maxWidth: SCREEN_WIDTH * 0.22,
+    paddingHorizontal: 6,
   },
   spaceKeyPressed: {
     backgroundColor: KEYBOARD_COLORS.space.backgroundPressed,
   },
   spaceKeyText: {
     color: KEYBOARD_COLORS.space.text,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
   },
-  
+
   deleteKey: {
     backgroundColor: KEYBOARD_COLORS.delete.background,
-    width: 44,
-    minWidth: 44,
-    maxWidth: 44,
+    width: 40,
+    minWidth: 40,
+    maxWidth: 40,
   },
   deleteKeyPressed: {
     backgroundColor: KEYBOARD_COLORS.delete.backgroundPressed,
   },
   deleteKeyText: {
     color: KEYBOARD_COLORS.delete.text,
-    fontSize: 18,
+    fontSize: 17,
   },
-  
+
   clearKey: {
     backgroundColor: KEYBOARD_COLORS.clear.background,
-    width: 50,
-    minWidth: 50,
-    maxWidth: 50,
+    width: 46,
+    minWidth: 46,
+    maxWidth: 46,
   },
   clearKeyPressed: {
     backgroundColor: KEYBOARD_COLORS.clear.backgroundPressed,
   },
   clearKeyText: {
     color: KEYBOARD_COLORS.clear.text,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
   },
-  
+
   submitKey: {
     backgroundColor: KEYBOARD_COLORS.submit.background,
-    width: 70,
-    minWidth: 70,
-    maxWidth: 70,
-    paddingHorizontal: 8,
+    width: 65,
+    minWidth: 65,
+    maxWidth: 65,
+    paddingHorizontal: 6,
   },
   submitKeyPressed: {
     backgroundColor: KEYBOARD_COLORS.submit.backgroundPressed,
   },
   submitKeyText: {
     color: KEYBOARD_COLORS.submit.text,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
   },
-  
+
   // Row labels (optional)
   rowLabel: {
     position: 'absolute',
@@ -293,7 +294,7 @@ export const styles = StyleSheet.create({
     color: '#666666',
     fontWeight: '500',
   },
-  
+
   // Keyboard header
   header: {
     flexDirection: 'row',

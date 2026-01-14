@@ -22,7 +22,7 @@ export const customClues = {
   'Bacon': 'crispy strips of pork',
   'Avocado': 'green fruit used in guacamole',
   'Popcorn': 'popped corn kernels, movie snack',
-  
+
   // Sports
   'Basketball': 'played with an orange ball and hoops',
   'Soccer': 'the world\'s most popular sport with a round ball',
@@ -37,7 +37,7 @@ export const customClues = {
   'Boxing': 'fighting sport with gloves',
   'Wrestling': 'grappling combat sport',
   'Surfing': 'riding ocean waves on a board',
-  
+
   // Movies
   'Titanic': 'ship disaster romance film',
   'Avatar': 'blue aliens on Pandora',
@@ -51,7 +51,7 @@ export const customClues = {
   'Harry Potter': 'young wizard at Hogwarts',
   'Inception': 'dreams within dreams',
   'The Matrix': 'reality is a simulation',
-  
+
   // Animals
   'Dog': 'man\'s best friend, barks',
   'Cat': 'meows and purrs, likes to nap',
@@ -66,7 +66,7 @@ export const customClues = {
   'Dolphin': 'intelligent marine mammal',
   'Whale': 'largest animal in the ocean',
   'Shark': 'predatory fish with sharp teeth',
-  
+
   // Places
   'Paris': 'city with the Eiffel Tower',
   'London': 'capital of England with Big Ben',
@@ -78,7 +78,7 @@ export const customClues = {
   'Mountain': 'tall natural elevation',
   'Desert': 'hot sandy landscape',
   'Forest': 'dense area with many trees',
-  
+
   // Music
   'Guitar': 'stringed instrument with six strings',
   'Piano': 'keyboard instrument with 88 keys',
@@ -117,14 +117,14 @@ export const tamilCategoryHints = {
 // Generate hints for a word
 export const generateHints = (word, topic, language = 'en') => {
   const hints = [];
-  
+
   // Hint 1: Category
   if (language === 'ta') {
     hints.push(tamilCategoryHints[topic] || "இது ஒரு பொதுவான வார்த்தை");
   } else {
     hints.push(categoryHints[topic] || "It's a common word");
   }
-  
+
   // Hint 2: Letter count with blanks
   const blanks = Array(word.length).fill('_').join(' ');
   if (language === 'ta') {
@@ -132,7 +132,7 @@ export const generateHints = (word, topic, language = 'en') => {
   } else {
     hints.push(`It has ${word.length} letters: ${blanks}`);
   }
-  
+
   // Hint 3: First letter + custom clue
   const clue = customClues[word] || (language === 'ta' ? "இந்த வகையில் ஒரு வார்த்தை" : "A word in this category");
   if (language === 'ta') {
@@ -140,7 +140,7 @@ export const generateHints = (word, topic, language = 'en') => {
   } else {
     hints.push(`Starts with "${word[0]}", ${clue}`);
   }
-  
+
   // Hint 4: Partial reveal (show first, last, and some middle letters)
   const partial = word.split('').map((char, index) => {
     if (index === 0 || index === word.length - 1) return char;
@@ -148,34 +148,59 @@ export const generateHints = (word, topic, language = 'en') => {
     return '_';
   }).join(' ');
   hints.push(partial);
-  
+
   return hints;
+};
+
+// Helper function to split text into grapheme clusters (keeps combining characters together)
+const splitIntoGraphemes = (text) => {
+  // Use Intl.Segmenter for proper grapheme segmentation if available
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    const segmenter = new Intl.Segmenter('ta', { granularity: 'grapheme' });
+    return Array.from(segmenter.segment(text), s => s.segment);
+  }
+
+  // Fallback: Use regex to keep Tamil combining characters (U+0B80–U+0BFF) with their base
+  // Tamil combining vowel signs: ா ி ீ ு ூ ெ ே ை ொ ோ ௌ ் (U+0BBE–U+0BCD)
+  const graphemes = [];
+  const regex = /[\u0B80-\u0BFF][\u0BBE-\u0BCD]*/g;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    graphemes.push(match[0]);
+  }
+
+  // If regex didn't match (non-Tamil text), fall back to spread operator
+  return graphemes.length > 0 ? graphemes : [...text];
 };
 
 // Scramble a word
 export const scrambleWord = (word) => {
-  const wordArray = word.split('');
+  // Split into grapheme clusters to preserve combining characters
+  const wordArray = splitIntoGraphemes(word);
   const scrambled = [...wordArray];
-  
+
   // Fisher-Yates shuffle
   for (let i = scrambled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
   }
-  
+
   // Make sure it's actually scrambled (not the same as original)
   if (scrambled.join('') === word && word.length > 1) {
     return scrambleWord(word); // Try again
   }
-  
+
   return scrambled.join('');
 };
 
 // Generate fill in the blanks pattern
 export const generateBlanksPattern = (word) => {
-  return word.split('').map((char, index) => {
-    if (index === 0) return char; // Always show first letter
-    if (index % 3 === 0) return char; // Show every 3rd letter
+  // Split into grapheme clusters to preserve combining characters
+  const graphemes = splitIntoGraphemes(word);
+
+  return graphemes.map((grapheme, index) => {
+    if (index === 0) return grapheme; // Always show first letter
+    if (index % 3 === 0) return grapheme; // Show every 3rd letter
     return '_';
   }).join(' ');
 };
@@ -234,7 +259,7 @@ export const emojiHints = {
   'Pho': '🍜',
   'Dim Sum': '🥟',
   'Spring Rolls': '🥢',
-  
+
   // Sports
   'Basketball': '🏀',
   'Soccer': '⚽',
@@ -286,7 +311,7 @@ export const emojiHints = {
   'Triathlon': '🏊',
   'Cheerleading': '📣',
   'Dance': '💃',
-  
+
   // Movies
   'Titanic': '🚢',
   'Avatar': '👽',
@@ -339,7 +364,7 @@ export const emojiHints = {
   'Up': '🎈',
   'Wall-E': '🤖',
   'Ratatouille': '🐀',
-  
+
   // Animals
   'Dog': '🐕',
   'Cat': '🐱',
@@ -396,7 +421,7 @@ export const emojiHints = {
   'Kangaroo': '🦘',
   'Koala': '🐨',
   'Platypus': '🦫',
-  
+
   // Places
   'Paris': '🗼',
   'London': '🏰',
@@ -449,7 +474,7 @@ export const emojiHints = {
   'Hospital': '🏥',
   'School': '🏫',
   'University': '🎓',
-  
+
   // Music
   'Guitar': '🎸',
   'Piano': '🎹',
@@ -501,7 +526,7 @@ export const emojiHints = {
   'Verse': '🎵',
   'Symphony': '🎼',
   'Ballad': '🎵',
-  
+
   // General
   'Birthday': '🎂',
   'Wedding': '💍',
@@ -561,11 +586,11 @@ export const emojiHints = {
 // Calculate score based on hints used and time
 export const calculateScore = (hintsUsed, timeSpent, isCorrect) => {
   if (!isCorrect) return 0;
-  
+
   const basePoints = 10;
   const hintBonus = Math.max(0, (4 - hintsUsed) * 2); // 8, 6, 4, 2, 0
   const speedBonus = timeSpent < 10 ? 5 : timeSpent < 15 ? 3 : 0;
-  
+
   return basePoints + hintBonus + speedBonus;
 };
 
@@ -852,24 +877,15 @@ export const tamilEmojiHints = {
   'மழை': '🌧️',
   'வெயில்': '☀️',
   'காற்று': '💨',
-  'குடும்பம்': '👨‍👩‍👧‍👦',
-  'நண்பன்': '🤝',
-  'உறவு': '❤️',
-  'அம்மா': '👩',
-  'அப்பா': '👨',
-  'தாத்தா': '👴',
-  'பாட்டி': '👵',
-  'அண்ணன்': '👦',
-  'தம்பி': '👦',
-  'அக்கா': '👧',
-  'தங்கை': '👧',
-  'மாமா': '👨',
-  'அத்தை': '👩',
-  'சித்தி': '👩',
-  'பெரியப்பா': '👨',
-  'சின்னம்மா': '👩',
-  'மருமகன்': '👨',
-  'மருமகள்': '👩',
+  'நண்பர்கள்': '👥',
+  'மகிழ்ச்சி': '😊',
+  'சந்தோஷம்': '😄',
+  'சிரிப்பு': '😂',
+  'அழுகை': '😢',
+  'கோபம்': '😠',
+  'அன்பு': '❤️',
+  'பயம்': '😨',
+  'ஆச்சரியம்': '😲',
   'புத்தகம்': '📚',
   'பேனா': '🖊️',
   'பென்சில்': '✏️',
@@ -903,6 +919,25 @@ export const tamilEmojiHints = {
   'தேவாலயம்': '⛪',
   'மசூதி': '🕌',
   'மருத்துவமனை': '🏥',
+  'பூ': '🌺',
+  'மரம்': '🌳',
+  'இலை': '🍃',
+  'வானம்': '🌌',
+  'நட்சத்திரம்': '⭐',
+  'சந்திரன்': '🌙',
+  'சூரியன்': '☀️',
+  'மேகம்': '☁️',
+  'மின்னல்': '⚡',
+  'வானவில்': '🌈',
+  'தண்ணீர்': '🌊',
+  'நெருப்பு': '🔥',
+  'பனி': '❄️',
+  'உப்பு': '🧂',
+  'சர்க்கரை': '🍬',
+  'எண்ணெய்': '🛢️',
+  'தங்கம்': '🏅',
+  'வெள்ளி': '🥈',
+  'வைரம்': '💎',
 };
 
 // Get emoji for a word (supports both English and Tamil)

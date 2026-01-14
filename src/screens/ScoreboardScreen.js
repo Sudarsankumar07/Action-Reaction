@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../components/CommonComponents';
 import { colors, typography, spacing, borderRadius, topicConfig } from '../theme';
+import { saveHighScore } from '../services/highScoreService';
 
 const { width } = Dimensions.get('window');
 
@@ -23,8 +24,22 @@ export default function ScoreboardScreen({ route, navigation }) {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const [isNewRecord, setIsNewRecord] = React.useState(false);
+  const [previousHigh, setPreviousHigh] = React.useState(0);
 
   const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
+
+  // Check and save high score (skip practice mode)
+  useEffect(() => {
+    async function checkHighScore() {
+      if (mode !== 'practice') {
+        const result = await saveHighScore(mode, score);
+        setIsNewRecord(result.isNewRecord);
+        setPreviousHigh(result.previousHigh);
+      }
+    }
+    checkHighScore();
+  }, [mode, score]);
 
   useEffect(() => {
     Animated.parallel([
@@ -64,12 +79,12 @@ export default function ScoreboardScreen({ route, navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={config.gradient} style={styles.gradient}>
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.header,
               {
@@ -79,110 +94,135 @@ export default function ScoreboardScreen({ route, navigation }) {
             ]}
           >
             <View style={styles.iconContainer}>
-              <Ionicons name="trophy" size={64} color={colors.white} />
+              {isNewRecord ? (
+                <>
+                  <Ionicons name="trophy" size={64} color="#FFD700" />
+                  <Text style={styles.newRecordBadge}>NEW RECORD! 🎉</Text>
+                </>
+              ) : (
+                <Ionicons name="trophy" size={64} color={colors.white} />
+              )}
             </View>
-            <Text style={styles.title}>Round Complete!</Text>
+            <Text style={styles.title}>
+              {isNewRecord ? 'New High Score!' : 'Round Complete!'}
+            </Text>
             <Text style={styles.subtitle}>{getMessage()}</Text>
           </Animated.View>
-          
+
           {/* Stats Card */}
           <Animated.View
-          style={[
-            styles.statsCard,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <View style={styles.mainStat}>
-            <Text style={styles.mainStatNumber}>{score}</Text>
-            <Text style={styles.mainStatLabel}>Correct Answers</Text>
-          </View>
+            style={[
+              styles.statsCard,
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <View style={styles.mainStat}>
+              <Text style={styles.mainStatNumber}>{score}</Text>
+              <Text style={styles.mainStatLabel}>Correct Answers</Text>
+            </View>
 
-          <View style={styles.divider} />
+            <View style={styles.divider} />
 
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <View style={[styles.statIconContainer, { backgroundColor: colors.success }]}>
-                <Ionicons name="checkmark" size={24} color={colors.white} />
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <View style={[styles.statIconContainer, { backgroundColor: colors.success }]}>
+                  <Ionicons name="checkmark" size={24} color={colors.white} />
+                </View>
+                <Text style={styles.statNumber}>{score}</Text>
+                <Text style={styles.statLabel}>Correct</Text>
               </View>
-              <Text style={styles.statNumber}>{score}</Text>
-              <Text style={styles.statLabel}>Correct</Text>
-            </View>
 
-            <View style={styles.statItem}>
-              <View style={[styles.statIconContainer, { backgroundColor: colors.error }]}>
-                <Ionicons name="close" size={24} color={colors.white} />
+              <View style={styles.statItem}>
+                <View style={[styles.statIconContainer, { backgroundColor: colors.error }]}>
+                  <Ionicons name="close" size={24} color={colors.white} />
+                </View>
+                <Text style={styles.statNumber}>{passed}</Text>
+                <Text style={styles.statLabel}>Passed</Text>
               </View>
-              <Text style={styles.statNumber}>{passed}</Text>
-              <Text style={styles.statLabel}>Passed</Text>
-            </View>
 
-            <View style={styles.statItem}>
-              <View style={[styles.statIconContainer, { backgroundColor: colors.primary }]}>
-                <Ionicons name="list" size={24} color={colors.white} />
+              <View style={styles.statItem}>
+                <View style={[styles.statIconContainer, { backgroundColor: colors.primary }]}>
+                  <Ionicons name="list" size={24} color={colors.white} />
+                </View>
+                <Text style={styles.statNumber}>{total}</Text>
+                <Text style={styles.statLabel}>Total</Text>
               </View>
-              <Text style={styles.statNumber}>{total}</Text>
-              <Text style={styles.statLabel}>Total</Text>
             </View>
-          </View>
 
-          <View style={styles.divider} />
+            <View style={styles.divider} />
 
-          <View style={styles.accuracyContainer}>
-            <Text style={styles.accuracyLabel}>Accuracy</Text>
-            <View style={styles.progressBarContainer}>
-              <Animated.View
-                style={[
-                  styles.progressBar,
-                  {
-                    width: progressAnim.interpolate({
-                      inputRange: [0, 100],
-                      outputRange: ['0%', '100%'],
-                    }),
-                  },
-                ]}
-              />
+            <View style={styles.accuracyContainer}>
+              <Text style={styles.accuracyLabel}>Accuracy</Text>
+              <View style={styles.progressBarContainer}>
+                <Animated.View
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: progressAnim.interpolate({
+                        inputRange: [0, 100],
+                        outputRange: ['0%', '100%'],
+                      }),
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.accuracyText}>{accuracy}%</Text>
             </View>
-            <Text style={styles.accuracyText}>{accuracy}%</Text>
-          </View>
-        </Animated.View>
 
-        {/* Actions */}
-        <Animated.View
-          style={[
-            styles.actions,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Button
-            title="Play Again"
-            onPress={() => navigation.replace('Game', { topic, mode })}
-            gradient={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)']}
-            style={[styles.button, { marginTop: spacing.xl }]}
-            icon={<Ionicons name="refresh" size={24} color={colors.white} />}
-          />
-          
-          <Button
-            title="Change Topic"
-            onPress={() => navigation.navigate('Home')}
-            variant="outline"
-            style={[styles.button, styles.outlineButton]}
-            textStyle={styles.outlineButtonText}
-          />
+            {/* High Score Display */}
+            {previousHigh > 0 && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.highScoreContainer}>
+                  <Ionicons name="trophy" size={24} color="#FFD700" />
+                  <Text style={styles.highScoreLabel}>
+                    {isNewRecord ? 'Previous Best: ' : 'Your Best: '}
+                  </Text>
+                  <Text style={styles.highScoreNumber}>
+                    {isNewRecord ? previousHigh : score}
+                  </Text>
+                </View>
+              </>
+            )}
+          </Animated.View>
 
-          <Button
-            title="Settings"
-            onPress={() => navigation.navigate('Settings')}
-            variant="ghost"
-            style={styles.button}
-            icon={<Ionicons name="settings-outline" size={20} color={colors.white} />}
-          />
-        </Animated.View>
+          {/* Actions */}
+          <Animated.View
+            style={[
+              styles.actions,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <Button
+              title="Play Again"
+              onPress={() => navigation.replace('Game', { topic, mode })}
+              gradient={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.2)']}
+              style={[styles.button, { marginTop: spacing.xl }]}
+              icon={<Ionicons name="refresh" size={24} color={colors.white} />}
+            />
+
+            <Button
+              title="Change Topic"
+              onPress={() => navigation.navigate('Home')}
+              variant="outline"
+              style={[styles.button, styles.outlineButton]}
+              textStyle={styles.outlineButtonText}
+            />
+
+            <Button
+              title="Settings"
+              onPress={() => navigation.navigate('Settings')}
+              variant="ghost"
+              style={styles.button}
+              icon={<Ionicons name="settings-outline" size={20} color={colors.white} />}
+            />
+          </Animated.View>
         </ScrollView>
       </LinearGradient>
     </View>
@@ -327,5 +367,35 @@ const styles = StyleSheet.create({
   outlineButtonText: {
     color: colors.white,
     fontWeight: typography.fontWeightBold,
+  },
+  newRecordBadge: {
+    position: 'absolute',
+    bottom: -10,
+    backgroundColor: '#FFD700',
+    color: colors.gray900,
+    fontSize: typography.fontSizeXs,
+    fontWeight: typography.fontWeightExtrabold,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+  },
+  highScoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+  },
+  highScoreLabel: {
+    fontSize: typography.fontSizeMd,
+    color: colors.gray700,
+    marginLeft: spacing.sm,
+    fontWeight: typography.fontWeightSemibold,
+  },
+  highScoreNumber: {
+    fontSize: typography.fontSizeXl,
+    fontWeight: typography.fontWeightBold,
+    color: '#FFD700',
+    marginLeft: spacing.xs,
   },
 });

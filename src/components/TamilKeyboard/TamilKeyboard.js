@@ -69,7 +69,7 @@ function KeyboardKey({
   // Get styles based on key type
   const getKeyStyle = () => {
     const baseStyle = [styles.key];
-    
+
     switch (type) {
       case 'vowel':
         baseStyle.push(isPressed ? styles.vowelKeyPressed : styles.vowelKey);
@@ -112,7 +112,7 @@ function KeyboardKey({
 
   const getTextStyle = () => {
     const baseStyle = [styles.keyText];
-    
+
     switch (type) {
       case 'vowel':
         baseStyle.push(styles.vowelKeyText);
@@ -156,7 +156,7 @@ function KeyboardKey({
         disabled={disabled}
       >
         <Text style={getTextStyle()}>
-          {customLabel || keyData.char}
+          {customLabel || keyData.displayChar || keyData.char}
         </Text>
       </TouchableOpacity>
     </Animated.View>
@@ -245,7 +245,7 @@ export default function TamilKeyboard({
             // Check if the last character is a consonant that can accept a vowel sign
             const chars = [...value];
             const lastChar = chars.length > 0 ? chars[chars.length - 1] : '';
-            
+
             if (lastChar && isConsonant(lastChar)) {
               // Append the vowel sign (it will combine with the consonant)
               onChange(value + code);
@@ -288,11 +288,11 @@ export default function TamilKeyboard({
               <Text style={styles.placeholder}>{placeholder}</Text>
             )}
           </Text>
-          <Animated.View 
+          <Animated.View
             style={[
-              styles.cursor, 
+              styles.cursor,
               { opacity: cursorAnim }
-            ]} 
+            ]}
           />
         </View>
       )}

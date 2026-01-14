@@ -59,19 +59,20 @@ export const TAMIL_CONSONANTS_ROW2 = [
 // ொ = ெ (U+0BC6) + ா (U+0BBE)
 // ோ = ே (U+0BC7) + ா (U+0BBE)  
 // ௌ = ெ (U+0BC6) + ள (U+0BD7) - actually uses AU length mark
+// displayChar: Shows the vowel sign with க (ka) as base for better visibility on buttons
 export const TAMIL_VOWEL_SIGNS = [
-  { char: 'ா', code: '\u0BBE', label: 'aa', combinesWith: 'consonant' },
-  { char: 'ி', code: '\u0BBF', label: 'i', combinesWith: 'consonant' },
-  { char: 'ீ', code: '\u0BC0', label: 'ii', combinesWith: 'consonant' },
-  { char: 'ு', code: '\u0BC1', label: 'u', combinesWith: 'consonant' },
-  { char: 'ூ', code: '\u0BC2', label: 'uu', combinesWith: 'consonant' },
-  { char: 'ெ', code: '\u0BC6', label: 'e', combinesWith: 'consonant' },
-  { char: 'ே', code: '\u0BC7', label: 'ee', combinesWith: 'consonant' },
-  { char: 'ை', code: '\u0BC8', label: 'ai', combinesWith: 'consonant' },
-  { char: 'ொ', code: '\u0BC6\u0BBE', label: 'o', combinesWith: 'consonant', isCompound: true },
-  { char: 'ோ', code: '\u0BC7\u0BBE', label: 'oo', combinesWith: 'consonant', isCompound: true },
-  { char: 'ௌ', code: '\u0BC6\u0BD7', label: 'au', combinesWith: 'consonant', isCompound: true },
-  { char: '்', code: '\u0BCD', label: 'pulli', combinesWith: 'consonant' }, // Pulli (Virama)
+  { char: 'ா', code: '\u0BBE', label: 'aa', combinesWith: 'consonant', displayChar: 'கா' },
+  { char: 'ி', code: '\u0BBF', label: 'i', combinesWith: 'consonant', displayChar: 'கி' },
+  { char: 'ீ', code: '\u0BC0', label: 'ii', combinesWith: 'consonant', displayChar: 'கீ' },
+  { char: 'ு', code: '\u0BC1', label: 'u', combinesWith: 'consonant', displayChar: 'கு' },
+  { char: 'ூ', code: '\u0BC2', label: 'uu', combinesWith: 'consonant', displayChar: 'கூ' },
+  { char: 'ெ', code: '\u0BC6', label: 'e', combinesWith: 'consonant', displayChar: 'கெ' },
+  { char: 'ே', code: '\u0BC7', label: 'ee', combinesWith: 'consonant', displayChar: 'கே' },
+  { char: 'ை', code: '\u0BC8', label: 'ai', combinesWith: 'consonant', displayChar: 'கை' },
+  { char: 'ொ', code: '\u0BC6\u0BBE', label: 'o', combinesWith: 'consonant', isCompound: true, displayChar: 'கொ' },
+  { char: 'ோ', code: '\u0BC7\u0BBE', label: 'oo', combinesWith: 'consonant', isCompound: true, displayChar: 'கோ' },
+  { char: 'ௌ', code: '\u0BC6\u0BD7', label: 'au', combinesWith: 'consonant', isCompound: true, displayChar: 'கௌ' },
+  { char: '்', code: '\u0BCD', label: 'pulli', combinesWith: 'consonant', displayChar: 'க்' }, // Pulli (Virama)
 ];
 
 // Row 5: Special/Action Keys
@@ -100,8 +101,8 @@ export const TAMIL_UNICODE = {
 export function isConsonant(char) {
   if (!char) return false;
   const code = char.charCodeAt(0);
-  return code >= TAMIL_UNICODE.CONSONANT_START && 
-         code <= TAMIL_UNICODE.CONSONANT_END;
+  return code >= TAMIL_UNICODE.CONSONANT_START &&
+    code <= TAMIL_UNICODE.CONSONANT_END;
 }
 
 /**
@@ -110,8 +111,8 @@ export function isConsonant(char) {
 export function isVowel(char) {
   if (!char) return false;
   const code = char.charCodeAt(0);
-  return code >= TAMIL_UNICODE.VOWEL_START && 
-         code <= TAMIL_UNICODE.VOWEL_END;
+  return code >= TAMIL_UNICODE.VOWEL_START &&
+    code <= TAMIL_UNICODE.VOWEL_END;
 }
 
 /**
@@ -120,9 +121,9 @@ export function isVowel(char) {
 export function isVowelSign(char) {
   if (!char) return false;
   const code = char.charCodeAt(0);
-  return (code >= TAMIL_UNICODE.VOWEL_SIGN_START && 
-          code <= TAMIL_UNICODE.VOWEL_SIGN_END) ||
-         code === TAMIL_UNICODE.PULLI;
+  return (code >= TAMIL_UNICODE.VOWEL_SIGN_START &&
+    code <= TAMIL_UNICODE.VOWEL_SIGN_END) ||
+    code === TAMIL_UNICODE.PULLI;
 }
 
 /**
@@ -139,7 +140,7 @@ export function canAcceptVowelSign(text) {
  */
 export function getLastBaseChar(text) {
   if (!text || text.length === 0) return null;
-  
+
   // Traverse backwards to find the base consonant
   for (let i = text.length - 1; i >= 0; i--) {
     if (isConsonant(text[i])) {
