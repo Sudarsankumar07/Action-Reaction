@@ -8,11 +8,11 @@
 
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import ScoreboardScreen from '../../../src/screens/ScoreboardScreen';
-import { saveHighScore } from '../../../src/services/highScoreService';
+import ScoreboardScreen from '../../src/screens/ScoreboardScreen';
+import { saveHighScore } from '../../src/services/highScoreService';
 
 // Mock dependencies
-jest.mock('../../../src/services/highScoreService');
+jest.mock('../../src/services/highScoreService');
 
 // Mock navigation
 const mockNavigation = {

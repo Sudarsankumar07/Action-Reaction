@@ -194,24 +194,37 @@ const cardStyles = StyleSheet.create({
   },
 });
 
-export const TopicCard = ({ topic, topicConfig, onPress, style }) => {
+export const TopicCard = ({ topic, onPress, style }) => {
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={() => onPress(topic)}
       activeOpacity={0.7}
       style={[topicCardStyles.container, style]}
     >
       <LinearGradient
-        colors={topicConfig.gradient}
+        colors={topic.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={topicCardStyles.gradient}
       >
         <View style={topicCardStyles.content}>
           <View style={topicCardStyles.iconContainer}>
-            <Ionicons name={topicConfig.icon} size={32} color={colors.white} />
+            <Ionicons name={topic.icon} size={32} color={colors.white} />
           </View>
-          <Text style={topicCardStyles.title}>{topicConfig.name}</Text>
+          <View style={topicCardStyles.textContent}>
+            <Text style={topicCardStyles.title}>{topic.name}</Text>
+            {topic.wordCount !== undefined && (
+              <View style={{ flexDirection: 'row' }}>
+                <Text style={topicCardStyles.wordCount}>
+                  {topic.wordCount}
+                </Text>
+                <Text style={topicCardStyles.wordCount}>
+                  {' '}words
+                </Text>
+              </View>
+            )}
+
+          </View>
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -244,9 +257,17 @@ const topicCardStyles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: spacing.md,
   },
+  textContent: {
+    flex: 1,
+  },
   title: {
     fontSize: typography.fontSize2xl,
     fontWeight: typography.fontWeightBold,
     color: colors.white,
+  },
+  wordCount: {
+    fontSize: typography.fontSizeSm,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: spacing.xs,
   },
 });

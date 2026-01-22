@@ -85,7 +85,7 @@ export default function HomeScreen({ navigation }) {
         style={styles.gradient}
       >
         {/* Scrollable Content */}
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -94,7 +94,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.header}>
             <Animated.View style={[styles.settingsButtonContainer, { opacity: fadeAnim }]}>
               <TouchableOpacity
-                style={styles.settingsButton}
+                testID="settings-button"
                 onPress={() => navigation.navigate('Settings')}
                 activeOpacity={0.7}
               >
@@ -102,10 +102,10 @@ export default function HomeScreen({ navigation }) {
               </TouchableOpacity>
             </Animated.View>
 
-            <Animated.View 
+            <Animated.View
               style={[
                 styles.headerContent,
-                { 
+                {
                   opacity: fadeAnim,
                   transform: [{ translateY: slideAnim }]
                 }
@@ -118,16 +118,16 @@ export default function HomeScreen({ navigation }) {
               </View>
               <Text style={styles.title}>Action Reaction</Text>
               <Text style={styles.subtitle}>
-                Hold your phone on your forehead{'\n'}Let others act it out!{'\n'}Charades 
+                Hold your phone on your forehead{'\n'}Let others act it out!{'\n'}Charades
               </Text>
             </Animated.View>
           </View>
 
           {/* Topics Section with White Background */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.topicsContainer,
-              { 
+              {
                 opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }]
               }
@@ -135,137 +135,142 @@ export default function HomeScreen({ navigation }) {
           >
             {/* Mode Selection Tabs */}
             <View style={styles.modeTabsContainer}>
-            <TouchableOpacity
-              style={[
-                styles.modeTab,
-                selectedMode === 'multiplayer' && styles.modeTabActive,
-              ]}
-              onPress={() => setSelectedMode('multiplayer')}
-              activeOpacity={0.7}
-            >
-              <Ionicons 
-                name="people" 
-                size={20} 
-                color={selectedMode === 'multiplayer' ? colors.white : colors.gray600} 
-              />
-              <Text style={[
-                styles.modeTabText,
-                selectedMode === 'multiplayer' && styles.modeTabTextActive,
-              ]}>
-                Multiplayer
+              <TouchableOpacity
+                style={[
+                  styles.modeTab,
+                  selectedMode === 'multiplayer' && styles.modeTabActive,
+                ]}
+                onPress={() => setSelectedMode('multiplayer')}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="people"
+                  size={20}
+                  color={selectedMode === 'multiplayer' ? colors.white : colors.gray600}
+                />
+                <Text style={[
+                  styles.modeTabText,
+                  selectedMode === 'multiplayer' && styles.modeTabTextActive,
+                ]}>
+                  Multiplayer
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modeTab,
+                  selectedMode === 'singleplayer' && styles.modeTabActive,
+                ]}
+                onPress={() => setSelectedMode('singleplayer')}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="person"
+                  size={20}
+                  color={selectedMode === 'singleplayer' ? colors.white : colors.gray600}
+                />
+                <Text style={[
+                  styles.modeTabText,
+                  selectedMode === 'singleplayer' && styles.modeTabTextActive,
+                ]}>
+                  Single Player
+                </Text>
+              </TouchableOpacity>
+
+
+            </View>
+
+            <View style={styles.topicsHeader}>
+              <Text style={styles.sectionTitle}>
+                {selectedMode === 'multiplayer' ? 'Choose Your Topic' : 'Choose Game Mode'}
               </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.modeTab,
-                selectedMode === 'singleplayer' && styles.modeTabActive,
-              ]}
-              onPress={() => setSelectedMode('singleplayer')}
-              activeOpacity={0.7}
-            >
-              <Ionicons 
-                name="person" 
-                size={20} 
-                color={selectedMode === 'singleplayer' ? colors.white : colors.gray600} 
-              />
-              <Text style={[
-                styles.modeTabText,
-                selectedMode === 'singleplayer' && styles.modeTabTextActive,
-              ]}>
-                Single Player
+              <Text style={styles.sectionSubtitle}>
+                {selectedMode === 'multiplayer'
+                  ? 'Select a category to start the fun!'
+                  : 'Pick a single-player challenge!'}
               </Text>
-            </TouchableOpacity>
+            </View>
 
-            
-          </View>
-
-          <View style={styles.topicsHeader}>
-            <Text style={styles.sectionTitle}>
-              {selectedMode === 'multiplayer' ? 'Choose Your Topic' : 'Choose Game Mode'}
-            </Text>
-            <Text style={styles.sectionSubtitle}>
-              {selectedMode === 'multiplayer' 
-                ? 'Select a category to start the fun!' 
-                : 'Pick a single-player challenge!'}
-            </Text>
-          </View>
-
-          <View style={styles.topicsContent}>
-            {selectedMode === 'multiplayer' ? (
-              // Multiplayer Topics
-              <>
-                {topics.map((topic, index) => (
-                  <Animated.View
-                    key={topic}
-                    style={{
-                      opacity: fadeAnim,
-                      transform: [{
-                        translateX: Animated.multiply(slideAnim, new Animated.Value(index % 2 === 0 ? -1 : 1))
-                      }]
-                    }}
-                  >
-                    <TopicCard
-                      topic={topic}
-                      topicConfig={topicConfig[topic]}
-                      onPress={() => handleTopicSelect(topic)}
-                      style={styles.topicCard}
-                    />
-                  </Animated.View>
-                ))}
-
-                {/* Footer */}
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>
-                    🎮 {topics.reduce((sum, topic) => sum + getWordCount(topic, language), 0)}+ words across {topics.length} categories
-                  </Text>
-                </View>
-              </>
-            ) : (
-              // Single Player Modes
-              <>
-                {singlePlayerModes.map((mode, index) => (
-                  <Animated.View
-                    key={mode.id}
-                    style={{
-                      opacity: fadeAnim,
-                      transform: [{
-                        translateX: Animated.multiply(slideAnim, new Animated.Value(index % 2 === 0 ? -1 : 1))
-                      }]
-                    }}
-                  >
-                    <TouchableOpacity
-                      style={styles.singlePlayerCard}
-                      onPress={() => navigation.navigate('Game', { mode: mode.id, topic: 'general' })}
-                      activeOpacity={0.8}
+            <View style={styles.topicsContent}>
+              {selectedMode === 'multiplayer' ? (
+                // Multiplayer Topics
+                <>
+                  {topics.map((topic, index) => (
+                    <Animated.View
+                      key={topic}
+                      style={{
+                        opacity: fadeAnim,
+                        transform: [{
+                          translateX: Animated.multiply(slideAnim, new Animated.Value(index % 2 === 0 ? -1 : 1))
+                        }]
+                      }}
                     >
-                      <LinearGradient
-                        colors={mode.gradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.singlePlayerCardGradient}
-                      >
-                        <View style={styles.singlePlayerCardIcon}>
-                          <Ionicons name={mode.icon} size={32} color={colors.white} />
-                        </View>
-                        <View style={styles.singlePlayerCardContent}>
-                          <Text style={styles.singlePlayerCardTitle}>{mode.name}</Text>
-                          <Text style={styles.singlePlayerCardDescription}>{mode.description}</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </Animated.View>
-                ))}
+                      <TopicCard
+                        topic={{
+                          id: topic,
+                          name: topicConfig[topic].name,
+                          icon: topicConfig[topic].icon,
+                          gradient: topicConfig[topic].gradient,
+                          wordCount: getWordCount(topic, language)
+                        }}
+                        onPress={() => handleTopicSelect(topic)}
+                        style={styles.topicCard}
+                      />
+                    </Animated.View>
+                  ))}
 
-                {/* Footer */}
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>
-                    🎯 {singlePlayerModes.length} single-player modes available
-                  </Text>
-                </View>
-              </>
-            )}
+                  {/* Footer */}
+                  <View style={styles.footer}>
+                    <Text style={styles.footerText}>
+                      🎮 {topics.reduce((sum, topic) => sum + getWordCount(topic, language), 0)}+ words across {topics.length} categories
+                    </Text>
+                  </View>
+                </>
+              ) : (
+                // Single Player Modes
+                <>
+                  {singlePlayerModes.map((mode, index) => (
+                    <Animated.View
+                      key={mode.id}
+                      style={{
+                        opacity: fadeAnim,
+                        transform: [{
+                          translateX: Animated.multiply(slideAnim, new Animated.Value(index % 2 === 0 ? -1 : 1))
+                        }]
+                      }}
+                    >
+                      <TouchableOpacity
+                        style={styles.singlePlayerCard}
+                        onPress={() => navigation.navigate('Game', { mode: mode.id, topic: 'general' })}
+                        activeOpacity={0.8}
+                      >
+                        <LinearGradient
+                          colors={mode.gradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.singlePlayerCardGradient}
+                        >
+                          <View style={styles.singlePlayerCardIcon}>
+                            <Ionicons name={mode.icon} size={32} color={colors.white} />
+                          </View>
+                          <View style={styles.singlePlayerCardContent}>
+                            <Text style={styles.singlePlayerCardTitle}>{mode.name}</Text>
+                            <Text style={styles.singlePlayerCardDescription}>{mode.description}</Text>
+                          </View>
+                          <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.7)" />
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  ))}
+
+                  {/* Footer */}
+                  <View style={styles.footer}>
+                    <Text style={styles.footerText}>
+                      🎯 {singlePlayerModes.length} single-player modes available
+                    </Text>
+                  </View>
+                </>
+              )}
             </View>
           </Animated.View>
         </ScrollView>

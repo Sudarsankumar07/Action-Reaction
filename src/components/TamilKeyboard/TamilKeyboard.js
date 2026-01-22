@@ -13,6 +13,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   Animated,
   Platform,
@@ -41,6 +42,7 @@ function KeyboardKey({
   onPressOut,
   customLabel,
   disabled = false,
+  testID,
 }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -148,6 +150,7 @@ function KeyboardKey({
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <TouchableOpacity
+        testID={testID}
         style={getKeyStyle()}
         onPress={() => !disabled && onPress(keyData)}
         onPressIn={handlePressIn}
@@ -155,7 +158,10 @@ function KeyboardKey({
         activeOpacity={0.7}
         disabled={disabled}
       >
-        <Text style={getTextStyle()}>
+        <Text
+          style={getTextStyle()}
+          accessibilityRole="button"
+        >
           {customLabel || keyData.displayChar || keyData.char}
         </Text>
       </TouchableOpacity>
@@ -200,13 +206,13 @@ export default function TamilKeyboard({
   }, []);
 
   // Handle key press with haptic feedback
-  const handleKeyPress = useCallback(async (keyData) => {
+  const handleKeyPress = useCallback((keyData) => {
     if (disabled) return;
 
     // Haptic feedback
     if (Platform.OS !== 'web') {
       try {
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       } catch (e) {
         // Haptics not available
       }
@@ -219,7 +225,7 @@ export default function TamilKeyboard({
         if (value.length > 0) {
           // Handle backspace - need to handle combining characters properly
           // Use string iterator to get actual grapheme clusters
-          const chars = [...value];
+          const chars = Array.from(value);
           chars.pop();
           onChange(chars.join(''));
         }
@@ -243,17 +249,17 @@ export default function TamilKeyboard({
           // Vowel signs should only be added after consonants
           if (combinesWith === 'consonant') {
             // Check if the last character is a consonant that can accept a vowel sign
-            const chars = [...value];
+            const chars = Array.from(value);
             const lastChar = chars.length > 0 ? chars[chars.length - 1] : '';
 
             if (lastChar && isConsonant(lastChar)) {
               // Append the vowel sign (it will combine with the consonant)
-              onChange(value + code);
+              onChange(value + char);
             } else {
               // If no consonant to combine with, show a placeholder consonant
               // or just ignore (user needs to type consonant first)
               // For better UX, we'll still add it but it may not display correctly
-              onChange(value + code);
+              onChange(value + char);
             }
           } else {
             // Regular character (vowel, consonant, etc.)
@@ -281,13 +287,15 @@ export default function TamilKeyboard({
       {/* Input Display */}
       {showInput && (
         <View style={styles.inputContainer}>
-          <Text style={styles.inputText} numberOfLines={1}>
-            {value ? (
-              value
-            ) : (
-              <Text style={styles.placeholder}>{placeholder}</Text>
-            )}
-          </Text>
+          <TextInput
+            value={value}
+            placeholder={placeholder}
+            editable={false}
+            style={styles.inputText}
+            placeholderTextColor="rgba(0, 0, 0, 0.4)"
+            testID="tamil-input"
+            multiline={false}
+          />
           <Animated.View
             style={[
               styles.cursor,
@@ -373,6 +381,7 @@ export default function TamilKeyboard({
           onPressOut={handlePressOut}
           customLabel="Space"
           disabled={disabled}
+          testID="key-space"
         />
 
         {/* Backspace Key */}
@@ -396,6 +405,7 @@ export default function TamilKeyboard({
           onPressOut={handlePressOut}
           customLabel="Clear"
           disabled={disabled}
+          testID="key-clear"
         />
 
         {/* Submit Key */}
@@ -407,7 +417,8 @@ export default function TamilKeyboard({
           onPressIn={() => handlePressIn('SUBMIT')}
           onPressOut={handlePressOut}
           customLabel="சமர்ப்பி"
-          disabled={disabled || !value.trim()}
+          disabled={disabled}
+          testID="key-submit"
         />
       </View>
     </View>

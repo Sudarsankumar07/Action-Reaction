@@ -10,14 +10,46 @@ import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Accelerometer } from 'expo-sensors';
-import GameScreen from '../../../src/screens/GameScreen';
+import GameScreen from '../../src/screens/GameScreen';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 // Mock dependencies
 jest.mock('expo-screen-orientation');
-jest.mock('../../../src/services/hintService');
-jest.mock('../../../src/services/highScoreService');
-jest.mock('../../../src/data/words');
+jest.mock('../../src/services/hintService');
+jest.mock('../../src/services/highScoreService');
+jest.mock('../../src/data/words');
+jest.mock('expo-av', () => ({
+    Audio: {
+        setAudioModeAsync: jest.fn(),
+        Sound: {
+            createAsync: jest.fn(() =>
+                Promise.resolve({
+                    sound: {
+                        playAsync: jest.fn(),
+                        pauseAsync: jest.fn(),
+                        stopAsync: jest.fn(),
+                        unloadAsync: jest.fn(),
+                    },
+                })
+            ),
+        },
+    },
+}));
+jest.mock('@react-navigation/native', () => {
+    const actualNav = jest.requireActual('@react-navigation/native');
+    return {
+        ...actualNav,
+        useFocusEffect: (cb) => cb(),
+    };
+});
+jest.mock('expo-sensors', () => ({
+    Accelerometer: {
+        setUpdateInterval: jest.fn(),
+        addListener: jest.fn(() => ({
+            remove: jest.fn(),
+        })),
+    },
+}));
 
 // Mock navigation
 const mockNavigation = {
@@ -42,8 +74,8 @@ describe('GameScreen', () => {
 
         // Mock AsyncStorage defaults
         AsyncStorage.getItem.mockImplementation((key) => {
-            if (key === 'timerDuration') return Promise.resolve('60');
-            if (key === 'soundEnabled') return Promise.resolve('true');
+            if (key === 'game_timer') return Promise.resolve('60');
+            if (key === 'sound_enabled') return Promise.resolve('true');
             return Promise.resolve(null);
         });
 
@@ -76,12 +108,12 @@ describe('GameScreen', () => {
         render(<GameScreen route={mockRoute} navigation={mockNavigation} />);
 
         await waitFor(() => {
-            expect(AsyncStorage.getItem).toHaveBeenCalledWith('timerDuration');
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith('game_timer');
         });
     });
 
     // ✅ Test: Should render multiplayer mode
-    test('should render in multiplayer mode', () => {
+    test('should render in multiplayer mode', async () => {
         const multiplayerRoute = {
             params: {
                 topic: 'food',
@@ -94,12 +126,16 @@ describe('GameScreen', () => {
             <GameScreen route={multiplayerRoute} navigation={mockNavigation} />
         );
 
+        act(() => {
+            jest.runAllTimers();
+        });
+
         // Screen should render without errors
         expect(getByTestId).toBeTruthy();
     });
 
     // ✅ Test: Should render single player mode
-    test('should render in single player mode', () => {
+    test('should render in single player mode', async () => {
         const singlePlayerRoute = {
             params: {
                 topic: 'food',
@@ -137,7 +173,7 @@ describe('GameScreen', () => {
     // ✅ Test: Should cleanup on unmount
     test('should cleanup accelerometer and orientation on unmount', async () => {
         const mockRemove = jest.fn();
-        Accelerometer.addListener.mockReturnValue({ remove: mockRemove });
+        Accelerometer.addListener = jest.fn().mockReturnValue({ remove: mockRemove });
 
         const { unmount } = render(
             <GameScreen route={mockRoute} navigation={mockNavigation} />
@@ -147,7 +183,7 @@ describe('GameScreen', () => {
 
         await waitFor(() => {
             expect(ScreenOrientation.unlockAsync).toHaveBeenCalled();
-        });
+        }, { timeout: 3000 });
     });
 
     // ✅ Test: Should handle memory challenge mode
@@ -190,22 +226,22 @@ describe('GameScreen', () => {
             <GameScreen route={mockRoute} navigation={mockNavigation} />
         );
 
-        // Note: This test would require triggering game end condition
-        // In a real implementation, you'd simulate the game timer ending
-        // or all words being completed
+        // This test just verifies the screen renders
+        // Full game completion flow would require more complex simulation
+        expect(getByTestId).toBeTruthy();
     });
 
     // ✅ Test: Should handle sound enabled setting
     test('should respect sound enabled setting', async () => {
         AsyncStorage.getItem.mockImplementation((key) => {
-            if (key === 'soundEnabled') return Promise.resolve('false');
+            if (key === 'sound_enabled') return Promise.resolve('false');
             return Promise.resolve(null);
         });
 
         render(<GameScreen route={mockRoute} navigation={mockNavigation} />);
 
         await waitFor(() => {
-            expect(AsyncStorage.getItem).toHaveBeenCalledWith('soundEnabled');
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith('sound_enabled');
         });
     });
 

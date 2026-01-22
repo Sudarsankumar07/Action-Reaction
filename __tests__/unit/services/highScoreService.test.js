@@ -7,7 +7,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getHighScore, saveHighScore, clearHighScores } from '../../src/services/highScoreService';
+import { getHighScore, saveHighScore, clearHighScores } from '../../../src/services/highScoreService';
 
 // Mock AsyncStorage (fake storage for testing)
 jest.mock('@react-native-async-storage/async-storage', () => ({

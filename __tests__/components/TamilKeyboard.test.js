@@ -68,12 +68,12 @@ describe('TamilKeyboard Component', () => {
     // ✅ Test: onSubmit Handler
     test('should call onSubmit when submit is pressed', () => {
         const mockOnSubmit = jest.fn();
-        const { getByText } = render(
+        const { getByTestId } = render(
             <TamilKeyboard {...defaultProps} onSubmit={mockOnSubmit} value="test" />
         );
 
         // Find and press submit button
-        const submitButton = getByText(/சமர்ப்பி/); // Submit in Tamil
+        const submitButton = getByTestId('key-submit');
         fireEvent.press(submitButton);
 
         expect(mockOnSubmit).toHaveBeenCalled();
@@ -82,11 +82,11 @@ describe('TamilKeyboard Component', () => {
     // ✅ Test: Disabled State
     test('should not allow submission when disabled', () => {
         const mockOnSubmit = jest.fn();
-        const { getByText } = render(
+        const { getByTestId } = render(
             <TamilKeyboard {...defaultProps} disabled={true} onSubmit={mockOnSubmit} />
         );
 
-        const submitButton = getByText(/சமர்ப்பி/);
+        const submitButton = getByTestId('key-submit');
         fireEvent.press(submitButton);
 
         // Should not be called when disabled
@@ -96,11 +96,11 @@ describe('TamilKeyboard Component', () => {
     // ✅ Test: Empty Input Prevention
     test('should not submit when value is empty', () => {
         const mockOnSubmit = jest.fn();
-        const { getByText } = render(
+        const { getByTestId } = render(
             <TamilKeyboard {...defaultProps} value="" onSubmit={mockOnSubmit} />
         );
 
-        const submitButton = getByText(/சமர்ப்பி/);
+        const submitButton = getByTestId('key-submit');
         fireEvent.press(submitButton);
 
         // Should not submit empty value
@@ -119,12 +119,12 @@ describe('TamilKeyboard Component', () => {
     // ✅ Test: Clear Button (if exists)
     test('should clear input when clear button pressed', () => {
         const mockOnChange = jest.fn();
-        const { getByText } = render(
+        const { getByTestId } = render(
             <TamilKeyboard {...defaultProps} value="test" onChange={mockOnChange} />
         );
 
         // Find clear button
-        const clearButton = getByText(/Clear/i);
+        const clearButton = getByTestId('key-clear');
         fireEvent.press(clearButton);
 
         // Should be called with empty string

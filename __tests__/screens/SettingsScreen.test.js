@@ -9,7 +9,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import SettingsScreen from '../../../src/screens/SettingsScreen';
+import SettingsScreen from '../../src/screens/SettingsScreen';
 
 // Mock navigation
 const mockNavigation = {
@@ -18,7 +18,7 @@ const mockNavigation = {
 };
 
 // Mock LanguageContext
-jest.mock('../../../src/contexts/LanguageContext', () => ({
+jest.mock('../../src/contexts/LanguageContext', () => ({
     useLanguage: () => ({
         language: 'en',
         setLanguage: jest.fn(),
