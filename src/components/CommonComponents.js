@@ -3,22 +3,23 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
-export const Button = ({ 
-  title, 
-  onPress, 
-  variant = 'primary', 
+export const Button = ({
+  title,
+  onPress,
+  variant = 'primary',
   size = 'md',
   icon,
   disabled = false,
   gradient,
-  style 
+  style,
+  testID
 }) => {
   const getButtonStyle = () => {
     const styles = [buttonStyles.base];
-    
+
     if (size === 'sm') styles.push(buttonStyles.sm);
     if (size === 'lg') styles.push(buttonStyles.lg);
-    
+
     if (disabled) {
       styles.push(buttonStyles.disabled);
     } else {
@@ -37,17 +38,17 @@ export const Button = ({
           break;
       }
     }
-    
+
     if (style) styles.push(style);
     return styles;
   };
 
   const getTextStyle = () => {
     const styles = [buttonStyles.text];
-    
+
     if (size === 'sm') styles.push(buttonStyles.textSm);
     if (size === 'lg') styles.push(buttonStyles.textLg);
-    
+
     if (disabled) {
       styles.push(buttonStyles.textDisabled);
     } else {
@@ -58,7 +59,7 @@ export const Button = ({
           break;
       }
     }
-    
+
     return styles;
   };
 
@@ -71,7 +72,12 @@ export const Button = ({
 
   if (gradient && !disabled) {
     return (
-      <TouchableOpacity onPress={onPress} disabled={disabled} activeOpacity={0.8}>
+      <TouchableOpacity
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={0.8}
+        testID={testID || `${variant}-button`}
+      >
         <LinearGradient
           colors={gradient}
           start={{ x: 0, y: 0 }}
@@ -85,11 +91,12 @@ export const Button = ({
   }
 
   return (
-    <TouchableOpacity 
-      style={getButtonStyle()} 
-      onPress={onPress} 
+    <TouchableOpacity
+      style={getButtonStyle()}
+      onPress={onPress}
       disabled={disabled}
       activeOpacity={0.8}
+      testID={testID || `${variant}-button`}
     >
       {content}
     </TouchableOpacity>
@@ -189,7 +196,7 @@ const cardStyles = StyleSheet.create({
 
 export const TopicCard = ({ topic, topicConfig, onPress, style }) => {
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
       style={[topicCardStyles.container, style]}

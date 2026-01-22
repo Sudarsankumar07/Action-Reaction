@@ -583,15 +583,20 @@ export const emojiHints = {
   'Calendar': '📅',
 };
 
-// Calculate score based on hints used and time
-export const calculateScore = (hintsUsed, timeSpent, isCorrect) => {
-  if (!isCorrect) return 0;
+// Calculate score based on hint level used
+// Hint level 1 (easiest) = 10 points
+// Hint level 2 = 8 points  
+// Hint level 3 = 6 points
+// Hint level 4 (hardest) = 4 points
+export const calculateScore = (hintLevel) => {
+  const scoreMap = {
+    1: 10,
+    2: 8,
+    3: 6,
+    4: 4
+  };
 
-  const basePoints = 10;
-  const hintBonus = Math.max(0, (4 - hintsUsed) * 2); // 8, 6, 4, 2, 0
-  const speedBonus = timeSpent < 10 ? 5 : timeSpent < 15 ? 3 : 0;
-
-  return basePoints + hintBonus + speedBonus;
+  return scoreMap[hintLevel] || 0;
 };
 
 // Tamil emoji mappings

@@ -2,6 +2,10 @@
 node_modules/
 .pnp
 .pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Expo
 .expo/
@@ -19,6 +23,22 @@ web-build/
 *.keystore
 !debug.keystore
 
+# Android
+android/app/build/
+android/.gradle/
+android/captures/
+android/local.properties
+*.apk
+*.aab
+
+# iOS
+ios/Pods/
+ios/build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+ios/.xcode.env.local
+
 # Metro
 .metro-health-check*
 
@@ -27,14 +47,35 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 *.log*
+lerna-debug.log*
 
 # macOS
 .DS_Store
 *.pem
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
 
 # Local environment files
 .env*.local
 .env
+.env.development.local
+.env.test.local
+.env.production.local
 
 # IDE
 .vscode/
@@ -42,11 +83,37 @@ yarn-error.*
 *.swp
 *.swo
 *~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
 
 # Testing
 coverage/
+.nyc_output/
+*.lcov
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
 
 # Miscellaneous
 *.class
 *.lock
 .gradle/
+.cache/
+*.tgz
+*.gz
+.sass-cache/
+connect.lock
+typings/
+.eslintcache
+*.tsbuildinfo
