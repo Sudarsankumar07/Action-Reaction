@@ -22,13 +22,13 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 
 // Test component that uses the context
 const TestComponent = () => {
-    const { language, switchLanguage, t } = useLanguage();
+    const { language, setLanguage, t } = useLanguage();
 
     return (
         <>
             <Text testID="current-language">{language}</Text>
             <Text testID="translated-text">{t('home.title')}</Text>
-            <Text onPress={() => switchLanguage('ta')} testID="switch-button">
+            <Text onPress={() => setLanguage('ta')} testID="switch-button">
                 Switch
             </Text>
         </>
@@ -54,14 +54,14 @@ describe('LanguageContext', () => {
 
     // ✅ Test: Default Language is English
     test('should default to English language', async () => {
-        const { getByTestID } = render(
+        const { getByTestId } = render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
         );
 
         await waitFor(() => {
-            const languageText = getByTestID('current-language');
+            const languageText = getByTestId('current-language');
             expect(languageText.props.children).toBe('en');
         });
     });
@@ -71,14 +71,14 @@ describe('LanguageContext', () => {
         // Mock AsyncStorage to return Tamil
         AsyncStorage.getItem.mockResolvedValue('ta');
 
-        const { getByTestID } = render(
+        const { getByTestId } = render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
         );
 
         await waitFor(() => {
-            const languageText = getByTestID('current-language');
+            const languageText = getByTestId('current-language');
             expect(languageText.props.children).toBe('ta');
         });
 
@@ -87,7 +87,7 @@ describe('LanguageContext', () => {
 
     // ✅ Test: Switch Language
     test('should switch language when switchLanguage is called', async () => {
-        const { getByTestID } = render(
+        const { getByTestId } = render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
@@ -95,18 +95,18 @@ describe('LanguageContext', () => {
 
         // Initial language should be English
         await waitFor(() => {
-            expect(getByTestID('current-language').props.children).toBe('en');
+            expect(getByTestId('current-language').props.children).toBe('en');
         });
 
         // Switch to Tamil
-        const switchButton = getByTestID('switch-button');
+        const switchButton = getByTestId('switch-button');
         await act(async () => {
             switchButton.props.onPress();
         });
 
         // Language should be Tamil now
         await waitFor(() => {
-            expect(getByTestID('current-language').props.children).toBe('ta');
+            expect(getByTestId('current-language').props.children).toBe('ta');
         });
 
         // Should save to AsyncStorage
@@ -115,14 +115,14 @@ describe('LanguageContext', () => {
 
     // ✅ Test: Translation Function (t)
     test('should translate keys correctly', async () => {
-        const { getByTestID } = render(
+        const { getByTestId } = render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
         );
 
         await waitFor(() => {
-            const translatedText = getByTestID('translated-text');
+            const translatedText = getByTestId('translated-text');
             // Should show English translation
             expect(translatedText.props.children).toBeDefined();
             expect(typeof translatedText.props.children).toBe('string');
@@ -141,7 +141,7 @@ describe('LanguageContext', () => {
             return <Text testID="consumer2">{language}</Text>;
         };
 
-        const { getByTestID } = render(
+        const { getByTestId } = render(
             <LanguageProvider>
                 <Consumer1 />
                 <Consumer2 />
@@ -149,8 +149,8 @@ describe('LanguageContext', () => {
         );
 
         await waitFor(() => {
-            const lang1 = getByTestID('consumer1').props.children;
-            const lang2 = getByTestID('consumer2').props.children;
+            const lang1 = getByTestId('consumer1').props.children;
+            const lang2 = getByTestId('consumer2').props.children;
             expect(lang1).toBe(lang2);
             expect(lang1).toBe('en');
         });
@@ -161,7 +161,7 @@ describe('LanguageContext', () => {
         // Mock AsyncStorage error
         AsyncStorage.getItem.mockRejectedValue(new Error('Storage error'));
 
-        const { getByTestID } = render(
+        const { getByTestId } = render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
@@ -169,7 +169,7 @@ describe('LanguageContext', () => {
 
         // Should still default to English
         await waitFor(() => {
-            expect(getByTestID('current-language').props.children).toBe('en');
+            expect(getByTestId('current-language').props.children).toBe('en');
         });
     });
 
@@ -180,14 +180,14 @@ describe('LanguageContext', () => {
             return <Text testID="missing-key">{t('non.existent.key')}</Text>;
         };
 
-        const { getByTestID } = render(
+        const { getByTestId } = render(
             <LanguageProvider>
                 <TestTranslation />
             </LanguageProvider>
         );
 
         await waitFor(() => {
-            const text = getByTestID('missing-key').props.children;
+            const text = getByTestId('missing-key').props.children;
             // Should return the key itself as fallback
             expect(text).toContain('non.existent.key');
         });
@@ -224,3 +224,4 @@ describe('LanguageContext', () => {
  * 5. Test error handling
  * 6. Test edge cases
  */
+

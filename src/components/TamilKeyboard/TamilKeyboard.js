@@ -81,6 +81,8 @@ function KeyboardKey({
         break;
       case 'vowelSign':
         baseStyle.push(isPressed ? styles.vowelSignKeyPressed : styles.vowelSignKey);
+        // Make all vowel sign buttons wider to show combined characters clearly
+        baseStyle.push(styles.widerKey);
         break;
       case 'special':
         baseStyle.push(isPressed ? styles.specialKeyPressed : styles.specialKey);
@@ -183,6 +185,7 @@ export default function TamilKeyboard({
   disabled = false,
 }) {
   const [pressedKey, setPressedKey] = useState(null);
+  const [lastConsonant, setLastConsonant] = useState(null); // Track last clicked consonant
   const cursorAnim = useRef(new Animated.Value(1)).current;
 
   // Cursor blinking animation
@@ -205,6 +208,22 @@ export default function TamilKeyboard({
     return () => blink.stop();
   }, []);
 
+  // Generate vowel sign previews based on selected consonant
+  const generateVowelSignPreviews = useCallback(() => {
+    if (!lastConsonant) {
+      // No consonant selected - show original vowel signs
+      return TAMIL_VOWEL_SIGNS;
+    }
+
+    // Create preview keys: consonant + each vowel sign
+    return TAMIL_VOWEL_SIGNS.map((vowelSign) => ({
+      ...vowelSign,
+      displayChar: lastConsonant.char + vowelSign.char, // Combined display
+      previewMode: true,
+      baseConsonant: lastConsonant.char,
+    }));
+  }, [lastConsonant]);
+
   // Handle key press with haptic feedback
   const handleKeyPress = useCallback((keyData) => {
     if (disabled) return;
@@ -218,7 +237,15 @@ export default function TamilKeyboard({
       }
     }
 
-    const { code, char, combinesWith, isCompound } = keyData;
+    const { code, char, combinesWith, isCompound, previewMode, baseConsonant } = keyData;
+
+    // Track consonant clicks for vowel sign preview
+    // Check if it's a consonant (not a vowel sign, not an action key)
+    const isActionKey = code === 'BACKSPACE' || code === 'CLEAR' || code === 'SUBMIT' || code === 'SPACE';
+    if (!isActionKey && combinesWith !== 'consonant' && char && isConsonant(char)) {
+      console.log('🔤 Consonant clicked:', char, keyData);
+      setLastConsonant(keyData);
+    }
 
     switch (code) {
       case 'BACKSPACE':
@@ -232,6 +259,7 @@ export default function TamilKeyboard({
         break;
       case 'CLEAR':
         onChange('');
+        setLastConsonant(null); // Clear consonant selection when clearing input
         break;
       case 'SUBMIT':
         if (value.trim().length > 0) {
@@ -245,9 +273,27 @@ export default function TamilKeyboard({
         break;
       default:
         if (value.length < maxLength) {
+          // Handle preview mode for vowel signs
+          if (previewMode && baseConsonant) {
+            // In preview mode, REPLACE the last consonant with the combined character
+            const chars = Array.from(value);
+            const lastChar = chars.length > 0 ? chars[chars.length - 1] : '';
+
+            // Check if the last character is the base consonant
+            if (lastChar === baseConsonant) {
+              // Remove the last consonant and add the combined character
+              chars.pop();
+              const newValue = chars.join('') + baseConsonant + char;
+              console.log('✏️ Replacing:', lastChar, '→', baseConsonant + char);
+              onChange(newValue);
+            } else {
+              // Last char is not the base consonant, just add normally
+              onChange(value + baseConsonant + char);
+            }
+          }
           // Handle Tamil character composition
           // Vowel signs should only be added after consonants
-          if (combinesWith === 'consonant') {
+          else if (combinesWith === 'consonant') {
             // Check if the last character is a consonant that can accept a vowel sign
             const chars = Array.from(value);
             const lastChar = chars.length > 0 ? chars[chars.length - 1] : '';
@@ -353,9 +399,39 @@ export default function TamilKeyboard({
         ))}
       </View>
 
-      {/* Row 4: Vowel Signs + Pulli */}
+      {/* Row 4a: Vowel Signs Part 1 (Dynamic Preview) */}
       <View style={styles.row}>
-        {TAMIL_VOWEL_SIGNS.map((key) => (
+        {lastConsonant && (
+          <View style={styles.previewLabel}>
+            <Text style={styles.previewLabelText}>
+              {lastConsonant.char} +
+            </Text>
+          </View>
+        )}
+        {generateVowelSignPreviews().slice(0, 6).map((key) => (
+          <KeyboardKey
+            key={key.code}
+            keyData={key}
+            type="vowelSign"
+            isPressed={pressedKey === key.code}
+            onPress={handleKeyPress}
+            onPressIn={() => handlePressIn(key.code)}
+            onPressOut={handlePressOut}
+            disabled={disabled}
+          />
+        ))}
+      </View>
+
+      {/* Row 4b: Vowel Signs Part 2 + Pulli (Dynamic Preview) */}
+      <View style={styles.row}>
+        {lastConsonant && (
+          <View style={styles.previewLabel}>
+            <Text style={styles.previewLabelText}>
+              {lastConsonant.char} +
+            </Text>
+          </View>
+        )}
+        {generateVowelSignPreviews().slice(6).map((key) => (
           <KeyboardKey
             key={key.code}
             keyData={key}

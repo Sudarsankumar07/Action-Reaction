@@ -11,10 +11,31 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Import screens
-import HomeScreen from '../../../src/screens/HomeScreen';
-import GameScreen from '../../../src/screens/GameScreen';
-import SettingsScreen from '../../../src/screens/SettingsScreen';
-import ScoreboardScreen from '../../../src/screens/ScoreboardScreen';
+import HomeScreen from '../../src/screens/HomeScreen';
+import GameScreen from '../../src/screens/GameScreen';
+import SettingsScreen from '../../src/screens/SettingsScreen';
+import ScoreboardScreen from '../../src/screens/ScoreboardScreen';
+
+// Mock React Navigation
+jest.mock('@react-navigation/native', () => ({
+    NavigationContainer: ({ children }) => children,
+    useNavigation: () => ({
+        navigate: jest.fn(),
+        goBack: jest.fn(),
+        replace: jest.fn(),
+        reset: jest.fn(),
+    }),
+    useRoute: () => ({
+        params: {},
+    }),
+}));
+
+jest.mock('@react-navigation/native-stack', () => ({
+    createNativeStackNavigator: () => ({
+        Navigator: ({ children }) => children,
+        Screen: ({ children }) => children,
+    }),
+}));
 
 const Stack = createNativeStackNavigator();
 

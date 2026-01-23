@@ -6,7 +6,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // Row 1 has 13 keys (vowels + aytham), which is the most keys in a row
 const MAX_KEYS_IN_ROW = 13;
 const HORIZONTAL_PADDING = 8; // Total padding on sides
-const KEY_MARGIN = 1.5; // Reduced margin on each side of key
+const KEY_MARGIN = 3.5; // Increased spacing between keys
 const TOTAL_KEY_MARGINS = MAX_KEYS_IN_ROW * (KEY_MARGIN * 2);
 const AVAILABLE_WIDTH = SCREEN_WIDTH - HORIZONTAL_PADDING - TOTAL_KEY_MARGINS;
 const CALCULATED_KEY_WIDTH = Math.floor(AVAILABLE_WIDTH / MAX_KEYS_IN_ROW);
@@ -14,15 +14,15 @@ const CALCULATED_KEY_WIDTH = Math.floor(AVAILABLE_WIDTH / MAX_KEYS_IN_ROW);
 // Responsive key sizing - ensures keys fit on screen
 const getKeySize = () => {
   const baseWidth = Math.min(CALCULATED_KEY_WIDTH, 26); // Reduced cap for better fit
-  const minWidth = 20; // Minimum readable size
+  const minWidth = 18; // Reduced minimum for more spacing
   const keyWidth = Math.max(baseWidth, minWidth);
 
   if (SCREEN_WIDTH < 360) {
-    return { width: Math.max(keyWidth - 2, 18), height: 36, fontSize: 15 };
+    return { width: Math.max(keyWidth - 3, 16), height: 36, fontSize: 14 };
   } else if (SCREEN_WIDTH < 400) {
-    return { width: keyWidth, height: 38, fontSize: 16 };
+    return { width: Math.max(keyWidth - 2, 18), height: 38, fontSize: 15 };
   } else {
-    return { width: Math.min(keyWidth + 1, 26), height: 40, fontSize: 17 };
+    return { width: keyWidth, height: 40, fontSize: 16 };
   }
 };
 
@@ -145,7 +145,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 3,
+    marginBottom: 6,
     paddingHorizontal: 2,
     flexWrap: 'nowrap',
   },
@@ -212,6 +212,13 @@ export const styles = StyleSheet.create({
   },
   vowelSignKeyText: {
     color: KEYBOARD_COLORS.vowelSign.text,
+  },
+
+  // Wider keys for all vowel sign buttons to show combined characters clearly
+  widerKey: {
+    width: keySize.width * 1.3,
+    minWidth: keySize.width * 1.3,
+    maxWidth: keySize.width * 1.3,
   },
 
   specialKey: {
@@ -314,6 +321,23 @@ export const styles = StyleSheet.create({
   closeButtonText: {
     color: '#888888',
     fontSize: 20,
+  },
+
+  // Preview label for dynamic vowel signs
+  previewLabel: {
+    position: 'absolute',
+    left: 4,
+    backgroundColor: 'rgba(255, 215, 61, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 61, 0.4)',
+  },
+  previewLabelText: {
+    color: '#FFD93D',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });
 

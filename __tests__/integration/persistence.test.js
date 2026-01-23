@@ -6,17 +6,19 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveHighScore, getHighScore } from '../../../src/services/highScoreService';
+import { saveHighScore, getHighScore } from '../../src/services/highScoreService';
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage');
 
 describe('Integration: Data Persistence', () => {
+    let mockStorage;
+
     beforeEach(() => {
         jest.clearAllMocks();
 
         // Reset mock storage state
-        const mockStorage = {};
+        mockStorage = {};
 
         AsyncStorage.getItem.mockImplementation((key) => {
             return Promise.resolve(mockStorage[key] || null);
@@ -29,6 +31,20 @@ describe('Integration: Data Persistence', () => {
 
         AsyncStorage.removeItem.mockImplementation((key) => {
             delete mockStorage[key];
+            return Promise.resolve();
+        });
+
+        AsyncStorage.multiSet = jest.fn().mockImplementation((pairs) => {
+            pairs.forEach(([key, value]) => {
+                mockStorage[key] = value;
+            });
+            return Promise.resolve();
+        });
+
+        AsyncStorage.multiRemove = jest.fn().mockImplementation((keys) => {
+            keys.forEach((key) => {
+                delete mockStorage[key];
+            });
             return Promise.resolve();
         });
 

@@ -33,9 +33,8 @@ describe('SettingsScreen', () => {
         // Mock AsyncStorage default values
         AsyncStorage.getItem.mockImplementation((key) => {
             const defaults = {
-                timerDuration: '60',
-                soundEnabled: 'true',
-                vibrateEnabled: 'true',
+                game_timer: '60',
+                sound_enabled: 'true',
                 difficulty: 'medium',
             };
             return Promise.resolve(defaults[key] || null);
@@ -63,8 +62,8 @@ describe('SettingsScreen', () => {
         render(<SettingsScreen navigation={mockNavigation} />);
 
         await waitFor(() => {
-            expect(AsyncStorage.getItem).toHaveBeenCalledWith('timerDuration');
-            expect(AsyncStorage.getItem).toHaveBeenCalledWith('soundEnabled');
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith('game_timer');
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith('sound_enabled');
         });
     });
 
@@ -108,14 +107,14 @@ describe('SettingsScreen', () => {
     // ✅ Test: Should display current timer setting
     test('should display current timer setting from storage', async () => {
         AsyncStorage.getItem.mockImplementation((key) => {
-            if (key === 'timerDuration') return Promise.resolve('90');
+            if (key === 'game_timer') return Promise.resolve('90');
             return Promise.resolve(null);
         });
 
         render(<SettingsScreen navigation={mockNavigation} />);
 
         await waitFor(() => {
-            expect(AsyncStorage.getItem).toHaveBeenCalledWith('timerDuration');
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith('game_timer');
         });
     });
 
@@ -139,12 +138,12 @@ describe('SettingsScreen', () => {
         });
     });
 
-    // ✅ Test: Should persist vibration setting
-    test('should save vibration setting to AsyncStorage', async () => {
+    // ✅ Test: Should load sound setting from AsyncStorage
+    test('should load sound setting from AsyncStorage', async () => {
         render(<SettingsScreen navigation={mockNavigation} />);
 
         await waitFor(() => {
-            expect(AsyncStorage.getItem).toHaveBeenCalledWith('vibrateEnabled');
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith('sound_enabled');
         });
     });
 
@@ -154,9 +153,8 @@ describe('SettingsScreen', () => {
 
         // All settings should be loaded
         await waitFor(() => {
-            expect(AsyncStorage.getItem).toHaveBeenCalledWith('timerDuration');
-            expect(AsyncStorage.getItem).toHaveBeenCalledWith('soundEnabled');
-            expect(AsyncStorage.getItem).toHaveBeenCalledWith('vibrateEnabled');
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith('game_timer');
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith('sound_enabled');
         });
     });
 

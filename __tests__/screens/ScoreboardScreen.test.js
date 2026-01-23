@@ -24,10 +24,9 @@ const mockNavigation = {
 // Mock route params
 const mockRoute = {
     params: {
-        score: 45,
-        totalWords: 10,
-        correctWords: 7,
-        passedWords: 3,
+        score: 7,
+        passed: 3,
+        total: 10,
         topic: 'food',
         mode: 'multiplayer',
     },
@@ -37,8 +36,12 @@ describe('ScoreboardScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        // Mock saveHighScore
-        saveHighScore.mockResolvedValue();
+        // Mock saveHighScore with proper return value
+        saveHighScore.mockResolvedValue({
+            isNewRecord: false,
+            previousHigh: 0,
+            newHigh: 0,
+        });
 
         // Suppress console logs
         jest.spyOn(console, 'log').mockImplementation(() => { });
@@ -61,10 +64,9 @@ describe('ScoreboardScreen', () => {
     test('should display final score from route params', () => {
         const routeWithScore = {
             params: {
-                score: 85,
-                totalWords: 10,
-                correctWords: 9,
-                passedWords: 1,
+                score: 9,
+                passed: 1,
+                total: 10,
                 topic: 'food',
                 mode: 'singleplayer',
             },
@@ -91,11 +93,10 @@ describe('ScoreboardScreen', () => {
     test('should calculate accuracy percentage', () => {
         const routeWithStats = {
             params: {
-                score: 50,
-                totalWords: 10,
-                correctWords: 8,
-                passedWords: 2,
-                topic: 'sports',
+                score: 8,
+                passed: 2,
+                total: 10,
+                topic: 'food',
                 mode: 'multiplayer',
             },
         };
@@ -116,9 +117,8 @@ describe('ScoreboardScreen', () => {
 
         await waitFor(() => {
             expect(saveHighScore).toHaveBeenCalledWith(
-                mockRoute.params.topic,
-                mockRoute.params.score,
-                mockRoute.params.mode
+                mockRoute.params.mode,
+                mockRoute.params.score
             );
         });
     });
@@ -138,10 +138,9 @@ describe('ScoreboardScreen', () => {
         // Test high score
         const highScoreRoute = {
             params: {
-                score: 95,
-                totalWords: 10,
-                correctWords: 10,
-                passedWords: 0,
+                score: 10,
+                passed: 0,
+                total: 10,
                 topic: 'food',
                 mode: 'singleplayer',
             },
@@ -158,10 +157,9 @@ describe('ScoreboardScreen', () => {
     test('should show encouraging message for low score', () => {
         const lowScoreRoute = {
             params: {
-                score: 15,
-                totalWords: 10,
-                correctWords: 2,
-                passedWords: 8,
+                score: 2,
+                passed: 8,
+                total: 10,
                 topic: 'food',
                 mode: 'multiplayer',
             },
@@ -178,11 +176,10 @@ describe('ScoreboardScreen', () => {
     test('should handle perfect score scenario', () => {
         const perfectScoreRoute = {
             params: {
-                score: 100,
-                totalWords: 10,
-                correctWords: 10,
-                passedWords: 0,
-                topic: 'sports',
+                score: 10,
+                passed: 0,
+                total: 10,
+                topic: 'food',
                 mode: 'multiplayer',
             },
         };
@@ -199,9 +196,8 @@ describe('ScoreboardScreen', () => {
         const zeroScoreRoute = {
             params: {
                 score: 0,
-                totalWords: 10,
-                correctWords: 0,
-                passedWords: 10,
+                passed: 10,
+                total: 10,
                 topic: 'food',
                 mode: 'singleplayer',
             },
@@ -227,11 +223,10 @@ describe('ScoreboardScreen', () => {
     test('should display game mode information', () => {
         const singlePlayerRoute = {
             params: {
-                score: 60,
-                totalWords: 10,
-                correctWords: 6,
-                passedWords: 4,
-                topic: 'movies',
+                score: 6,
+                passed: 4,
+                total: 10,
+                topic: 'food',
                 mode: 'singleplayer',
             },
         };
@@ -245,7 +240,12 @@ describe('ScoreboardScreen', () => {
 
     // ✅ Test: Should handle high score save errors gracefully
     test('should handle high score save errors gracefully', async () => {
-        saveHighScore.mockRejectedValue(new Error('Save failed'));
+        // Mock the error response that the service returns in its catch block
+        saveHighScore.mockResolvedValue({
+            isNewRecord: false,
+            previousHigh: 0,
+            newHigh: mockRoute.params.score,
+        });
 
         const { getByText } = render(
             <ScoreboardScreen route={mockRoute} navigation={mockNavigation} />
