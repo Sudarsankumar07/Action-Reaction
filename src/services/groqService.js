@@ -1,10 +1,10 @@
 import axios from 'axios';
-import { PROXY_BASE_URL, APP_SECRET } from '@env';
+import { PROXY_BASE_URL } from '@env';
+import { getCurrentUserToken } from './firebaseAuth';
 
 class GroqService {
   constructor() {
     this.proxyUrl = PROXY_BASE_URL || 'https://action-reaction-api.vercel.app';
-    this.appSecret = APP_SECRET || 'your-super-secret-key-change-this';
   }
 
   /**
@@ -17,10 +17,20 @@ class GroqService {
    */
   async generateHints(word, topic, difficulty = 'medium', language = 'en') {
     try {
-      console.log('Calling secure proxy for word:', word);
-      console.log('Using proxy URL:', this.proxyUrl);
-      console.log('APP_SECRET loaded:', this.appSecret ? 'Yes (' + this.appSecret.substring(0, 5) + '...)' : 'No');
-      
+      console.log('🔒 Calling secure proxy for word:', word);
+      console.log('🌐 Using proxy URL:', this.proxyUrl);
+
+      // Get Firebase JWT token
+      const token = await getCurrentUserToken();
+
+      if (!token) {
+        console.error('❌ Failed to get Firebase authentication token');
+        console.warn('Using fallback hints due to authentication failure');
+        return this.generateFallbackHints(word, topic);
+      }
+
+      console.log('✅ Firebase token obtained, making authenticated request');
+
       const response = await axios.post(
         `${this.proxyUrl}/api/hints/generate`,
         {
@@ -32,24 +42,25 @@ class GroqService {
         {
           headers: {
             'Content-Type': 'application/json',
-            'X-App-Secret': this.appSecret,
+            'Authorization': `Bearer ${token}`,
           },
           timeout: 15000,
         }
       );
 
-      console.log('Proxy Response:', response.data);
-      
+      console.log('✅ Proxy Response:', response.data);
+
       if (response.data.success && response.data.hints?.length === 4) {
         return response.data.hints;
       } else {
-        console.warn('Invalid response from proxy, using fallback');
+        console.warn('⚠️ Invalid response from proxy, using fallback');
         return this.generateFallbackHints(word, topic);
       }
     } catch (error) {
-      console.error('Proxy API Error:', error.message);
+      console.error('❌ Proxy API Error:', error.message);
       if (error.response) {
         console.error('Error Response:', error.response.data);
+        console.error('Status Code:', error.response.status);
       }
       return this.generateFallbackHints(word, topic);
     }
@@ -83,7 +94,7 @@ class GroqService {
     };
 
     const firstLetter = word[0].toUpperCase();
-    
+
     const partial = word.split('').map((char, index) => {
       if (index === 0 || index === word.length - 1) return char.toUpperCase();
       if (word.length > 5 && index % 2 === 1) return char.toUpperCase();
@@ -91,7 +102,7 @@ class GroqService {
     }).join(' ');
 
     let firstHint = customClues[word];
-    
+
     if (!firstHint) {
       const topicHints = {
         food: 'something delicious people love to eat',

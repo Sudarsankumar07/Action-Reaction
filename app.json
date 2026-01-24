@@ -19,13 +19,15 @@
       "bundleIdentifier": "com.actionreaction.app"
     },
     "android": {
-      "package": "com.actionreaction.app"
+      "package": "com.actionreaction.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "@react-native-firebase/app",
       [
         "expo-sensors",
         {

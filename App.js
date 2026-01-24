@@ -2,12 +2,14 @@ import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import HomeScreen from './src/screens/HomeScreen';
 import GameScreen from './src/screens/GameScreen';
 import ScoreboardScreen from './src/screens/ScoreboardScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { LanguageProvider } from './src/contexts/LanguageContext';
+import { signInAnonymously, onAuthStateChanged } from './src/services/firebaseAuth';
 
 const Stack = createNativeStackNavigator();
 
@@ -20,13 +22,29 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Pre-load any resources or make API calls you need here
-        // For example: await Font.loadAsync({...});
-        
+        console.log('🚀 Initializing Action Reaction app...');
+
+        // Only initialize Firebase on native platforms (not web)
+        if (Platform.OS === 'android' || Platform.OS === 'ios') {
+          console.log('🔥 Starting Firebase Anonymous Authentication...');
+          const authResult = await signInAnonymously();
+
+          if (authResult.success) {
+            console.log('✅ Firebase Authentication successful!');
+            console.log('👤 User ID:', authResult.uid);
+          } else {
+            console.error('❌ Firebase Authentication failed:', authResult.error);
+            console.warn('⚠️ App will continue but API calls may fail');
+          }
+        } else {
+          console.log('🌐 Running on web - Firebase native authentication not available');
+          console.warn('⚠️ Web platform detected - using fallback mode (API calls will use mock authentication)');
+        }
+
         // Simulate minimum splash screen display time (2 seconds)
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (e) {
-        console.warn('Error during app initialization (e.g., splash screen delay or resource loading).', {
+        console.warn('⚠️ Error during app initialization:', {
           error: e,
           message: e?.message,
           stack: e?.stack,
@@ -38,6 +56,25 @@ export default function App() {
     }
 
     prepare();
+
+    // Only listen for auth state changes on native platforms
+    if (Platform.OS === 'android' || Platform.OS === 'ios') {
+      // Listen for auth state changes (token refresh, etc.)
+      const unsubscribe = onAuthStateChanged((user) => {
+        if (user) {
+          console.log('🔥 Firebase auth state changed - User:', user.uid);
+        } else {
+          console.log('⚠️ User signed out, re-authenticating...');
+          signInAnonymously();
+        }
+      });
+
+      // Cleanup function
+      return () => {
+        console.log('🧹 Cleaning up Firebase auth listener');
+        unsubscribe();
+      };
+    }
   }, []);
 
   useEffect(() => {

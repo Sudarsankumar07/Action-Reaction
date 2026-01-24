@@ -24,6 +24,7 @@ web-build/
 !debug.keystore
 
 # Android
+android/
 android/app/build/
 android/.gradle/
 android/captures/
@@ -32,12 +33,20 @@ android/local.properties
 *.aab
 
 # iOS
+ios/
 ios/Pods/
 ios/build/
 *.ipa
 *.dSYM.zip
 *.dSYM
 ios/.xcode.env.local
+
+# Firebase - NEVER commit these sensitive files!
+google-services.json
+GoogleService-Info.plist
+firebase-adminsdk-*.json
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
 
 # Metro
 .metro-health-check*
