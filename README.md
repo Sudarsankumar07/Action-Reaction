@@ -163,6 +163,234 @@ Action-Reaction/
 
 ---
 
+## 🛠️ Setup & Installation
+
+### Prerequisites
+
+* **Node.js** (v20.16.0 or higher)
+* **npm** or **yarn**
+* **Expo CLI** (`npm install -g expo-cli`)
+* **Git**
+* **Android Studio** (for Android) or **Xcode** (for iOS)
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/Sudarsankumar07/Action-Reaction.git
+cd Action-Reaction
+
+# Install dependencies
+npm install
+
+# Start development server
+npx expo start
+```
+
+---
+
+## 🔧 Running the App
+
+### Option 1: Run with Expo Go (Easiest - No Firebase)
+
+**Best for:** Quick testing, development without AI hints
+
+```bash
+npx expo start
+```
+
+Then:
+* **Scan QR code** with Expo Go app (Android) or Camera (iOS)
+* App loads in **fallback mode** (AI hints use static fallback)
+* No Firebase authentication required
+
+**Limitations:**
+* ❌ No AI-powered hints (uses fallback)
+* ❌ API calls won't work
+* ✅ All other game modes work perfectly
+
+---
+
+### Option 2: Run with Full API Support (Firebase + AI Hints)
+
+**Best for:** Production-ready app, testing AI features
+
+This requires Firebase Authentication setup for secure API access.
+
+#### Step 1: Install Firebase Dependencies
+
+```bash
+npm install @react-native-firebase/app @react-native-firebase/auth
+```
+
+#### Step 2: Firebase Project Setup
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create or select project: `action-reaction-game`
+3. **Enable Anonymous Authentication:**
+   * Go to **Authentication** → **Sign-in method**
+   * Enable **Anonymous** provider
+   
+4. **Download `google-services.json` (Android):**
+   * **⚙️ Settings** → **Project settings**
+   * Add Android app
+   * Package name: `com.actionreaction.app`
+   * Download `google-services.json`
+   * Place in root: `Action-Reaction/google-services.json`
+
+5. **Get Service Account Key (Backend):**
+   * Go to **Service accounts** tab
+   * Click **Generate new private key**
+   * Download JSON for backend environment variables
+
+#### Step 3: Backend API Setup
+
+Backend hosted at: `https://action-reaction-api.vercel.app`
+
+**Required Vercel Environment Variables:**
+
+| Variable | Value | Source |
+|----------|-------|--------|
+| `GROQ_API_KEY` | Your API key | [Groq Console](https://console.groq.com/) |
+| `FIREBASE_PROJECT_ID` | `action-reaction-game` | Firebase Console |
+| `FIREBASE_SERVICE_ACCOUNT` | Full JSON | Service Account Key |
+
+> **Note:** Backend already configured. Only needed for custom deployment.
+
+#### Step 4: Build with EAS (Cloud Build)
+
+Native Firebase modules require development build:
+
+```bash
+# Install EAS CLI
+npm install -g eas-cli
+
+# Login
+eas login
+
+# Configure
+eas build:configure
+
+# Build for Android
+eas build --platform android --profile preview
+```
+
+**Build time:** ~10-20 minutes (first build)
+
+**After completion:**
+1. Download APK from EAS dashboard
+2. Install on Android device
+3. Firebase authenticates automatically
+
+#### Step 5: Run the App
+
+Once installed:
+* Firebase authenticates silently (no login screen)
+* Check logs: `✅ Firebase Authentication successful!`
+* AI hints work with full Groq API
+
+---
+
+## 🔐 How Authentication Works
+
+### For Users
+* **No login required** - automatic background authentication  
+* Each install gets unique anonymous user ID
+* Completely transparent (no UI)
+
+### For Developers
+
+**Architecture:**
+```
+App Launch → Firebase Anonymous Auth → JWT Token → API → Groq LLM
+```
+
+**Security Features:**
+* ✅ No API keys in app
+* ✅ Google-signed JWT (unforgeable)
+* ✅ Auto-expiring tokens
+* ✅ Per-user rate limiting
+* ✅ Backend JWT verification
+
+**Documentation:** See `Docs/secure_llm_integration.md` and `Docs/FIREBASE_SETUP.md`
+
+---
+
+## 🌐 Online vs Offline Mode
+
+App auto-switches between modes:
+
+### Online Mode (with API)
+* ✅ AI-powered hints from Groq LLM
+* ✅ Context-aware clues
+* ✅ Fresh hints every time
+* ✅ Cached for offline use
+
+### Offline Mode (Fallback)
+* ✅ Static hints from local DB
+* ✅ Emoji mappings
+* ✅ No internet needed
+* ✅ Instant response
+
+**Auto-detection:** Network connectivity checked automatically.
+
+---
+
+## 🎮 Testing Different Modes
+
+### Test AI Hints (Full Setup)
+```bash
+eas build --platform android --profile preview
+# Install APK → AI Hints use Groq API
+```
+
+### Test Fallback Mode
+```bash
+npx expo start
+# Scan QR → AI Hints use static fallback
+```
+
+### Test on Web
+```bash
+npx expo start --web
+# Fallback mode (Firebase not available on web)
+```
+
+---
+
+## 📱 Platform Support
+
+| Platform | Expo Go | Dev Build | Production |
+|----------|---------|-----------|------------|
+| **Android** | ✅ Fallback | ✅ Full Firebase | ✅ Full Firebase |
+| **iOS** | ⚠️ Not tested | ⚠️ Config needed | ⚠️ Config needed |
+| **Web** | ✅ Fallback | N/A | ✅ Fallback |
+
+---
+
+## 🐛 Troubleshooting
+
+### "No Firebase App has been created"
+* **Cause:** Running on web/Expo Go
+* **Fix:** Use EAS Build
+
+### "API calls failing"
+* Check network connectivity
+* Verify Vercel environment variables
+* Confirm Firebase Authentication enabled
+
+### Build failures
+* **Solution:** Use EAS Cloud Build
+* **Command:** `eas build --platform android --profile preview`
+
+### White screen
+* Check terminal logs
+* Try: `npx expo start --clear`
+
+---
+
+---
+
 ## 🏆 Scoring System
 
 ### Multiplayer Mode
