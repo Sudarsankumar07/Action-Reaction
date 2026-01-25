@@ -42,18 +42,18 @@ export default function SettingsScreen({ navigation }) {
     try {
       const savedTimer = await AsyncStorage.getItem('game_timer');
       const savedSound = await AsyncStorage.getItem('sound_enabled');
-      
+
       const newSettings = { ...settings };
-      
+
       if (savedTimer) {
         const timerValue = parseInt(savedTimer, 10);
         newSettings.timerDuration = timerValue;
       }
-      
+
       if (savedSound !== null) {
         newSettings.soundEnabled = savedSound === 'true';
       }
-      
+
       setSettings(newSettings);
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -65,10 +65,10 @@ export default function SettingsScreen({ navigation }) {
     if (key === 'timerDuration' && isSavingTimer) {
       return;
     }
-    
+
     // Use functional update to avoid stale closure issues
     setSettings(prevSettings => ({ ...prevSettings, [key]: value }));
-    
+
     // Save settings to AsyncStorage
     try {
       if (key === 'timerDuration') {
@@ -120,28 +120,28 @@ export default function SettingsScreen({ navigation }) {
 
   const handleCustomTime = async () => {
     const customTime = parseInt(customTimeInput, 10);
-    
+
     // Validate input and provide specific error messages
     if (!customTimeInput.trim()) {
       setCustomTimeError('Please enter a timer duration');
       return;
     }
-    
+
     if (isNaN(customTime)) {
       setCustomTimeError('Please enter a valid number');
       return;
     }
-    
+
     if (customTime < 15) {
       setCustomTimeError('Timer must be at least 15 seconds');
       return;
     }
-    
+
     if (customTime > 600) {
       setCustomTimeError('Timer cannot exceed 600 seconds (10 minutes)');
       return;
     }
-    
+
     // Valid input - close modal and save
     setShowCustomTimeModal(false);
     setCustomTimeInput('');
@@ -154,10 +154,10 @@ export default function SettingsScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      
+
       {/* In-app Notification */}
       {notification && (
-        <Animated.View 
+        <Animated.View
           style={[
             styles.notificationContainer,
             { opacity: fadeAnim, transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }] }
@@ -177,26 +177,26 @@ export default function SettingsScreen({ navigation }) {
           </LinearGradient>
         </Animated.View>
       )}
-      
+
       {/* Header */}
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
         style={styles.gradient}
       >
-        <ScrollView 
-          style={styles.scrollView} 
+        <ScrollView
+          style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.goBack()}
               style={styles.backButton}
             >
               <Ionicons name="arrow-back" size={24} color={colors.white} />
             </TouchableOpacity>
-            
+
             <View style={styles.headerContent}>
               <View style={styles.headerIconContainer}>
                 <Ionicons name="settings" size={32} color={colors.white} />
@@ -211,7 +211,7 @@ export default function SettingsScreen({ navigation }) {
             {/* Language Settings */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Language</Text>
-              
+
               <View style={styles.languageRow}>
                 <TouchableOpacity
                   style={[styles.languageButton, language === 'en' && styles.languageButtonActive]}
@@ -232,174 +232,199 @@ export default function SettingsScreen({ navigation }) {
             {/* Game Settings */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Game Settings</Text>
-          
+
               <View style={styles.card}>
                 <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <View style={[styles.settingIcon, { backgroundColor: colors.primary }]}>
-                  <Ionicons name="time-outline" size={20} color={colors.white} />
-                </View>
-                <View style={styles.settingText}>
-                  <Text style={styles.settingLabel}>Timer Duration</Text>
-                  <Text style={styles.settingDescription}>
-                    Set game round duration
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.timerOptions}>
-                {timerOptions.map((duration) => (
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIcon, { backgroundColor: colors.primary }]}>
+                      <Ionicons name="time-outline" size={20} color={colors.white} />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Timer Duration</Text>
+                      <Text style={styles.settingDescription}>
+                        Set game round duration
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.timerOptions}>
+                    {timerOptions.map((duration) => (
+                      <TouchableOpacity
+                        key={duration}
+                        style={[
+                          styles.timerOption,
+                          settings.timerDuration === duration && styles.timerOptionActive,
+                          isSavingTimer && styles.timerOptionDisabled,
+                        ]}
+                        onPress={() => updateSetting('timerDuration', duration)}
+                        disabled={isSavingTimer}
+                      >
+                        <Text
+                          style={[
+                            styles.timerOptionText,
+                            settings.timerDuration === duration && styles.timerOptionTextActive,
+                          ]}
+                        >
+                          {duration}s
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                   <TouchableOpacity
-                    key={duration}
                     style={[
-                      styles.timerOption,
-                      settings.timerDuration === duration && styles.timerOptionActive,
+                      styles.customTimeButton,
+                      !timerOptions.includes(settings.timerDuration) && styles.customTimeButtonActive,
                       isSavingTimer && styles.timerOptionDisabled,
                     ]}
-                    onPress={() => updateSetting('timerDuration', duration)}
+                    onPress={() => setShowCustomTimeModal(true)}
                     disabled={isSavingTimer}
                   >
+                    <Ionicons
+                      name="create-outline"
+                      size={16}
+                      color={!timerOptions.includes(settings.timerDuration) ? colors.white : colors.primary}
+                    />
                     <Text
                       style={[
-                        styles.timerOptionText,
-                        settings.timerDuration === duration && styles.timerOptionTextActive,
+                        styles.customTimeButtonText,
+                        !timerOptions.includes(settings.timerDuration) && styles.customTimeButtonTextActive,
                       ]}
                     >
-                      {duration}s
+                      {!timerOptions.includes(settings.timerDuration)
+                        ? `${settings.timerDuration}s`
+                        : 'Custom'}
                     </Text>
                   </TouchableOpacity>
-                ))}
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.settingItem}>
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIcon, { backgroundColor: colors.secondary }]}>
+                      <Ionicons name="options-outline" size={20} color={colors.white} />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Flip Sensitivity</Text>
+                      <Text style={styles.settingDescription}>
+                        Adjust motion detection: {settings.sensitivity.toFixed(1)}
+                      </Text>
+                    </View>
+                  </View>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={0.5}
+                    maximumValue={3.0}
+                    step={0.1}
+                    value={settings.sensitivity}
+                    onValueChange={(value) => updateSetting('sensitivity', value)}
+                    minimumTrackTintColor={colors.primary}
+                    maximumTrackTintColor={colors.gray300}
+                    thumbTintColor={colors.primary}
+                  />
+                </View>
               </View>
-              <TouchableOpacity
-                style={[
-                  styles.customTimeButton,
-                  !timerOptions.includes(settings.timerDuration) && styles.customTimeButtonActive,
-                  isSavingTimer && styles.timerOptionDisabled,
-                ]}
-                onPress={() => setShowCustomTimeModal(true)}
-                disabled={isSavingTimer}
-              >
-                <Ionicons 
-                  name="create-outline" 
-                  size={16} 
-                  color={!timerOptions.includes(settings.timerDuration) ? colors.white : colors.primary} 
-                />
-                <Text
-                  style={[
-                    styles.customTimeButtonText,
-                    !timerOptions.includes(settings.timerDuration) && styles.customTimeButtonTextActive,
-                  ]}
-                >
-                  {!timerOptions.includes(settings.timerDuration) 
-                    ? `${settings.timerDuration}s` 
-                    : 'Custom'}
-                </Text>
-              </TouchableOpacity>
             </View>
 
-            <View style={styles.divider} />
+            {/* Feedback Settings */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Feedback</Text>
 
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <View style={[styles.settingIcon, { backgroundColor: colors.secondary }]}>
-                  <Ionicons name="options-outline" size={20} color={colors.white} />
+              <View style={styles.card}>
+                <View style={styles.settingItem}>
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIcon, { backgroundColor: colors.warning }]}>
+                      <Ionicons name="volume-high" size={20} color={colors.white} />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Sound Effects</Text>
+                      <Text style={styles.settingDescription}>
+                        Play sounds during gameplay
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={settings.soundEnabled}
+                    onValueChange={(value) => updateSetting('soundEnabled', value)}
+                    trackColor={{ false: colors.gray300, true: colors.primaryLight }}
+                    thumbColor={settings.soundEnabled ? colors.primary : colors.gray400}
+                  />
                 </View>
-                <View style={styles.settingText}>
-                  <Text style={styles.settingLabel}>Flip Sensitivity</Text>
-                  <Text style={styles.settingDescription}>
-                    Adjust motion detection: {settings.sensitivity.toFixed(1)}
-                  </Text>
+
+                <View style={styles.divider} />
+
+                <View style={styles.settingItem}>
+                  <View style={styles.settingInfo}>
+                    <View style={[styles.settingIcon, { backgroundColor: colors.success }]}>
+                      <Ionicons name="phone-portrait-outline" size={20} color={colors.white} />
+                    </View>
+                    <View style={styles.settingText}>
+                      <Text style={styles.settingLabel}>Haptic Feedback</Text>
+                      <Text style={styles.settingDescription}>
+                        Vibrate on actions
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={settings.vibrationEnabled}
+                    onValueChange={(value) => updateSetting('vibrationEnabled', value)}
+                    trackColor={{ false: colors.gray300, true: colors.primaryLight }}
+                    thumbColor={settings.vibrationEnabled ? colors.primary : colors.gray400}
+                  />
                 </View>
               </View>
-              <Slider
-                style={styles.slider}
-                minimumValue={0.5}
-                maximumValue={3.0}
-                step={0.1}
-                value={settings.sensitivity}
-                onValueChange={(value) => updateSetting('sensitivity', value)}
-                minimumTrackTintColor={colors.primary}
-                maximumTrackTintColor={colors.gray300}
-                thumbTintColor={colors.primary}
+            </View>
+
+            {/* How to Play Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>How to Play</Text>
+
+              <View style={styles.card}>
+                <View style={styles.aboutItem}>
+                  <Ionicons name="bulb" size={24} color={colors.primary} />
+                  <View style={styles.aboutText}>
+                    <Text style={styles.aboutLabel}>How to Play</Text>
+                    <Text style={styles.aboutDescription}>
+                      Hold phone to forehead • Others act out the word • Flip down for correct • Flip up to pass
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* About / Credits Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>About</Text>
+
+              <View style={styles.card}>
+                <View style={styles.aboutItem}>
+                  <Ionicons name="code-slash" size={24} color={colors.primary} />
+                  <View style={styles.aboutText}>
+                    <Text style={styles.aboutLabel}>Developed by</Text>
+                    <Text style={styles.aboutValue}>D developer</Text>
+                  </View>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.aboutItem}>
+                  <Ionicons name="information-circle" size={24} color={colors.secondary} />
+                  <View style={styles.aboutText}>
+                    <Text style={styles.aboutLabel}>Version</Text>
+                    <Text style={styles.aboutValue}>1.0.0</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Button
+                title="Back to Home"
+                onPress={() => navigation.navigate('Home')}
+                gradient={[colors.primary, colors.primaryDark]}
+                icon={<Ionicons name="home" size={20} color={colors.white} />}
               />
             </View>
           </View>
-        </View>
-
-        {/* Feedback Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Feedback</Text>
-          
-          <View style={styles.card}>
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <View style={[styles.settingIcon, { backgroundColor: colors.warning }]}>
-                  <Ionicons name="volume-high" size={20} color={colors.white} />
-                </View>
-                <View style={styles.settingText}>
-                  <Text style={styles.settingLabel}>Sound Effects</Text>
-                  <Text style={styles.settingDescription}>
-                    Play sounds during gameplay
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={settings.soundEnabled}
-                onValueChange={(value) => updateSetting('soundEnabled', value)}
-                trackColor={{ false: colors.gray300, true: colors.primaryLight }}
-                thumbColor={settings.soundEnabled ? colors.primary : colors.gray400}
-              />
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.settingItem}>
-              <View style={styles.settingInfo}>
-                <View style={[styles.settingIcon, { backgroundColor: colors.success }]}>
-                  <Ionicons name="phone-portrait-outline" size={20} color={colors.white} />
-                </View>
-                <View style={styles.settingText}>
-                  <Text style={styles.settingLabel}>Haptic Feedback</Text>
-                  <Text style={styles.settingDescription}>
-                    Vibrate on actions
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={settings.vibrationEnabled}
-                onValueChange={(value) => updateSetting('vibrationEnabled', value)}
-                trackColor={{ false: colors.gray300, true: colors.primaryLight }}
-                thumbColor={settings.vibrationEnabled ? colors.primary : colors.gray400}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* How to Play Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>How to Play</Text>
-          
-          <View style={styles.card}>
-            <View style={styles.aboutItem}>
-              <Ionicons name="bulb" size={24} color={colors.primary} />
-              <View style={styles.aboutText}>
-                <Text style={styles.aboutLabel}>How to Play</Text>
-                <Text style={styles.aboutDescription}>
-                  Hold phone to forehead • Others act out the word • Flip down for correct • Flip up to pass
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Button
-            title="Back to Home"
-            onPress={() => navigation.navigate('Home')}
-            gradient={[colors.primary, colors.primaryDark]}
-            icon={<Ionicons name="home" size={20} color={colors.white} />}
-          />
-        </View>
-        </View>
         </ScrollView>
       </LinearGradient>
 
@@ -416,11 +441,11 @@ export default function SettingsScreen({ navigation }) {
               <Ionicons name="time-outline" size={32} color={colors.primary} />
               <Text style={styles.modalTitle}>Custom Timer</Text>
             </View>
-            
+
             <Text style={styles.modalDescription}>
               Enter duration in seconds (15-600)
             </Text>
-            
+
             <TextInput
               style={styles.modalInput}
               value={customTimeInput}
@@ -448,14 +473,14 @@ export default function SettingsScreen({ navigation }) {
               maxLength={3}
               autoFocus
             />
-            
+
             {customTimeError ? (
               <View style={styles.errorContainer}>
                 <Ionicons name="warning" size={16} color={colors.error} />
                 <Text style={styles.errorText}>{customTimeError}</Text>
               </View>
             ) : null}
-            
+
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonCancel]}
@@ -467,7 +492,7 @@ export default function SettingsScreen({ navigation }) {
               >
                 <Text style={styles.modalButtonTextCancel}>Cancel</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[styles.modalButton, styles.modalButtonConfirm]}
                 onPress={handleCustomTime}

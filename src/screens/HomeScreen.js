@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, TopicCard } from '../components/CommonComponents';
+import VideoPlayerModal from '../components/VideoPlayerModal';
 import { colors, typography, spacing, borderRadius, shadows, topicConfig } from '../theme';
 import { getAllTopics, getWordCount } from '../data/words';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -22,6 +23,7 @@ export default function HomeScreen({ navigation }) {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
   const [selectedMode, setSelectedMode] = useState('multiplayer'); // 'multiplayer' or 'singleplayer'
+  const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
 
   useEffect(() => {
     Animated.parallel([
@@ -90,12 +92,24 @@ export default function HomeScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Header with Settings Button */}
+          {/* Header with Settings and How to Play Buttons */}
           <View style={styles.header}>
-            <Animated.View style={[styles.settingsButtonContainer, { opacity: fadeAnim }]}>
+            <Animated.View style={[styles.headerButtonsContainer, { opacity: fadeAnim }]}>
+              {/* How to Play Button */}
+              <TouchableOpacity
+                testID="how-to-play-button"
+                onPress={() => setShowHowToPlayModal(true)}
+                style={styles.headerButton}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="play-circle-outline" size={20} color={colors.white} />
+              </TouchableOpacity>
+
+              {/* Settings Button */}
               <TouchableOpacity
                 testID="settings-button"
                 onPress={() => navigation.navigate('Settings')}
+                style={styles.headerButton}
                 activeOpacity={0.7}
               >
                 <Ionicons name="settings-outline" size={20} color={colors.white} />
@@ -275,6 +289,12 @@ export default function HomeScreen({ navigation }) {
           </Animated.View>
         </ScrollView>
       </LinearGradient>
+
+      {/* How to Play Video Modal */}
+      <VideoPlayerModal
+        visible={showHowToPlayModal}
+        onClose={() => setShowHowToPlayModal(false)}
+      />
     </View>
   );
 }
@@ -327,13 +347,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  settingsButtonContainer: {
+  headerButtonsContainer: {
     position: 'absolute',
     top: spacing.lg,
     right: spacing.md,
     zIndex: 10,
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
-  settingsButton: {
+  headerButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderRadius: 15,
     width: 30,
