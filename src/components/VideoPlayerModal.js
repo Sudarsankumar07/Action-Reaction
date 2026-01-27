@@ -13,21 +13,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
-const { width } = Dimensions.get('window');
-const VIDEO_SIZE = width * 0.85; // 85% of screen width for 1:1 ratio
+const { width, height } = Dimensions.get('window');
+// Use more screen real estate for better video display
+const H_PADDING_TOTAL = spacing.lg * 2;
+const MAX_WIDTH = Math.min(width - H_PADDING_TOTAL, 1200);
+const MAX_HEIGHT = Math.min(height * 0.9, 1200);
+// Use 16:9 as base but allow the video to determine final sizing
+let VIDEO_WIDTH = Math.round(MAX_WIDTH);
+let VIDEO_HEIGHT = Math.round((VIDEO_WIDTH * 9) / 16);
+if (VIDEO_HEIGHT > MAX_HEIGHT) {
+    VIDEO_HEIGHT = Math.round(MAX_HEIGHT);
+    VIDEO_WIDTH = Math.round((VIDEO_HEIGHT * 16) / 9);
+}
 
-export default function VideoPlayerModal({ visible, onClose }) {
+export default function VideoPlayerModal({ visible, onClose, source }) {
     const videoRef = useRef(null);
     const [isLoading, setIsLoading] = useState(true);
     const [hasVideo, setHasVideo] = useState(false);
 
-    // Check if video file exists (you'll add it later)
-    // For now, show placeholder
+    // Enable video if a source prop is provided
     useEffect(() => {
-        // Try to load video, show placeholder if not available
-        setHasVideo(false);
-        setIsLoading(false);
-    }, []);
+        setHasVideo(!!source);
+        setIsLoading(!source);
+    }, [source]);
 
     useEffect(() => {
         if (visible && videoRef.current && hasVideo) {
@@ -60,14 +68,7 @@ export default function VideoPlayerModal({ visible, onClose }) {
                 </TouchableOpacity>
 
                 {/* Video container */}
-                <View style={styles.videoContainer}>
-                    {/* 
-                    TODO: Uncomment this section when you add the video file
-                    When you're ready:
-                    1. Add video file to: assets/videos/how_to_play_multiplayer.mp4
-                    2. Change hasVideo to true in useEffect (line 28)
-                    3. Uncomment lines 64-86 below
-                    
+                    <View style={styles.videoContainer}>
                     {hasVideo ? (
                         <>
                             {isLoading && (
@@ -76,23 +77,24 @@ export default function VideoPlayerModal({ visible, onClose }) {
                                     <Text style={styles.loadingText}>Loading tutorial...</Text>
                                 </View>
                             )}
-                            <Video
-                                ref={videoRef}
-                                source={require('../../assets/videos/how_to_play_multiplayer.mp4')}
-                                style={styles.video}
-                                useNativeControls
-                                resizeMode={ResizeMode.CONTAIN}
-                                isLooping
-                                onLoad={() => setIsLoading(false)}
-                                onError={(error) => {
-                                    console.log('Video error:', error);
-                                    setHasVideo(false);
-                                    setIsLoading(false);
-                                }}
-                            />
+                                <Video
+                                    ref={videoRef}
+                                    source={typeof source === 'string' ? { uri: source } : source}
+                                    style={{ width: VIDEO_WIDTH, height: VIDEO_HEIGHT }}
+                                    useNativeControls
+                                    resizeMode={ResizeMode.CONTAIN}
+                                    shouldPlay={visible}
+                                    isLooping
+                                    onLoad={() => setIsLoading(false)}
+                                    onError={(error) => {
+                                        console.log('Video error:', error);
+                                        setHasVideo(false);
+                                        setIsLoading(false);
+                                    }}
+                                />
                         </>
-                    ) : ( */}
-                    {/* Placeholder - shows instructions until video is added */}
+                    ) : (
+                    /* Placeholder - shows instructions until video is added */
                     <LinearGradient
                         colors={[colors.primary, colors.primaryDark]}
                         style={styles.placeholder}
@@ -142,7 +144,7 @@ export default function VideoPlayerModal({ visible, onClose }) {
                             Video tutorial coming soon!
                         </Text>
                     </LinearGradient>
-                    {/* )} */}
+                    )}
                 </View>
             </View>
         </Modal>
@@ -153,9 +155,9 @@ const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.85)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: spacing.lg,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: spacing.lg,
     },
     closeButton: {
         position: 'absolute',
@@ -173,18 +175,16 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: 'rgba(255, 255, 255, 0.3)',
     },
-    videoContainer: {
-        width: VIDEO_SIZE,
-        height: VIDEO_SIZE,
-        borderRadius: borderRadius.xl,
-        overflow: 'hidden',
-        backgroundColor: colors.gray900,
-        ...shadows.xl,
-    },
-    video: {
-        width: '100%',
-        height: '100%',
-    },
+        videoContainer: {
+            flex: 1,
+            maxWidth: VIDEO_WIDTH,
+            maxHeight: VIDEO_HEIGHT,
+            borderRadius: borderRadius.lg,
+            overflow: 'hidden',
+            backgroundColor: colors.black,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
     loadingContainer: {
         position: 'absolute',
         top: 0,
@@ -193,13 +193,8 @@ const styles = StyleSheet.create({
         bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors.gray900,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         zIndex: 5,
-    },
-    loadingText: {
-        marginTop: spacing.md,
-        fontSize: typography.fontSizeMd,
-        color: colors.white,
     },
     placeholder: {
         width: '100%',

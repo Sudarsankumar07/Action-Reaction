@@ -294,6 +294,7 @@ export default function HomeScreen({ navigation }) {
       <VideoPlayerModal
         visible={showHowToPlayModal}
         onClose={() => setShowHowToPlayModal(false)}
+        source={require('../../assets/videos/how_to_play_multiplayer.mp4')}
       />
     </View>
   );
@@ -349,7 +350,7 @@ const styles = StyleSheet.create({
   },
   headerButtonsContainer: {
     position: 'absolute',
-    top: spacing.lg,
+    top: (StatusBar.currentHeight || spacing.xl) + spacing.sm,
     right: spacing.md,
     zIndex: 10,
     flexDirection: 'row',
