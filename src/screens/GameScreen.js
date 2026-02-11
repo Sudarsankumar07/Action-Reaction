@@ -79,6 +79,7 @@ export default function GameScreen({ route, navigation }) {
   // Demo video state
   const [showDemoVideo, setShowDemoVideo] = useState(false);
   const [hasSeenDemo, setHasSeenDemo] = useState(false);
+  const [isManualDemoView, setIsManualDemoView] = useState(false); // Track if user manually opened demo
 
   // Use refs to track current scores for navigation
   const scoreRef = useRef(0);
@@ -112,6 +113,7 @@ export default function GameScreen({ route, navigation }) {
           // Auto-show for first-time users
           if (!seen) {
             setShowDemoVideo(true);
+            setIsManualDemoView(false); // This is auto-play, not manual
           }
         } catch (error) {
           console.error('Error checking demo status:', error);
@@ -775,6 +777,7 @@ export default function GameScreen({ route, navigation }) {
           <>
             <DemoVideoOverlay
               visible={showDemoVideo}
+              isManualView={isManualDemoView}
               onClose={async () => {
                 setShowDemoVideo(false);
                 try {
@@ -783,16 +786,23 @@ export default function GameScreen({ route, navigation }) {
                 } catch (error) {
                   console.error('Error saving demo status:', error);
                 }
+                
+                // If this was auto-play (3-second demo), start game immediately
+                if (!isManualDemoView) {
+                  setCountdown(0); // Auto-close countdown and start game
+                }
+                setIsManualDemoView(false);
               }}
               onStartGame={async () => {
                 setShowDemoVideo(false);
+                setIsManualDemoView(false);
                 try {
                   await AsyncStorage.setItem('hasSeenMultiplayerDemo', 'true');
                   setHasSeenDemo(true);
                 } catch (error) {
                   console.error('Error saving demo status:', error);
                 }
-                // Skip countdown and start game immediately
+                // User clicked "Continue Game" button - start game immediately
                 setCountdown(0);
               }}
               soundEnabled={soundEnabled}
@@ -803,7 +813,10 @@ export default function GameScreen({ route, navigation }) {
             {!showDemoVideo && hasSeenDemo && (
               <TouchableOpacity
                 style={styles.demoButton}
-                onPress={() => setShowDemoVideo(true)}
+                onPress={() => {
+                  setShowDemoVideo(true);
+                  setIsManualDemoView(true); // User manually opened it
+                }}
                 activeOpacity={0.8}
               >
                 <Ionicons name="play-circle" size={20} color={colors.white} />

@@ -37,6 +37,7 @@ export default function DemoVideoOverlay({
   onStartGame,
   soundEnabled = true,
   maxDuration = 3,
+  isManualView = false, // When true, user clicked "How to Play" - show full video
 }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -52,10 +53,13 @@ export default function DemoVideoOverlay({
       videoRef.current.playAsync();
       setIsPlaying(true);
 
-      // Auto-close after max duration (3 seconds)
-      timerRef.current = setTimeout(() => {
-        handleClose();
-      }, maxDuration * 1000);
+      // Auto-close after max duration ONLY for first-time auto-play
+      // If user manually clicked "How to Play", let them watch the full video
+      if (!isManualView) {
+        timerRef.current = setTimeout(() => {
+          handleClose();
+        }, maxDuration * 1000);
+      }
     } else if (!visible && videoRef.current) {
       // Pause and reset when modal closes
       videoRef.current.pauseAsync();
@@ -69,7 +73,7 @@ export default function DemoVideoOverlay({
         clearTimeout(timerRef.current);
       }
     };
-  }, [visible]);
+  }, [visible, isManualView]);
 
   const handleClose = async () => {
     if (timerRef.current) {
@@ -120,7 +124,7 @@ export default function DemoVideoOverlay({
       setIsLoading(false);
       setHasError(false);
 
-      // Auto-close when video ends
+      // Auto-close when video ends (for manual views, let them finish watching)
       if (status.didJustFinish) {
         handleClose();
       }
