@@ -12,7 +12,6 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, TopicCard } from '../components/CommonComponents';
-import VideoPlayerModal from '../components/VideoPlayerModal';
 import { colors, typography, spacing, borderRadius, shadows, topicConfig } from '../theme';
 import { getAllTopics, getWordCount } from '../data/words';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -23,7 +22,6 @@ export default function HomeScreen({ navigation }) {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
   const [selectedMode, setSelectedMode] = useState('multiplayer'); // 'multiplayer' or 'singleplayer'
-  const [showHowToPlayModal, setShowHowToPlayModal] = useState(false);
 
   useEffect(() => {
     Animated.parallel([
@@ -95,16 +93,6 @@ export default function HomeScreen({ navigation }) {
           {/* Header with Settings and How to Play Buttons */}
           <View style={styles.header}>
             <Animated.View style={[styles.headerButtonsContainer, { opacity: fadeAnim }]}>
-              {/* How to Play Button */}
-              <TouchableOpacity
-                testID="how-to-play-button"
-                onPress={() => setShowHowToPlayModal(true)}
-                style={styles.headerButton}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="play-circle-outline" size={20} color={colors.white} />
-              </TouchableOpacity>
-
               {/* Settings Button */}
               <TouchableOpacity
                 testID="settings-button"
@@ -289,13 +277,6 @@ export default function HomeScreen({ navigation }) {
           </Animated.View>
         </ScrollView>
       </LinearGradient>
-
-      {/* How to Play Video Modal */}
-      <VideoPlayerModal
-        visible={showHowToPlayModal}
-        onClose={() => setShowHowToPlayModal(false)}
-        source={require('../../assets/videos/how_to_play_multiplayer.mp4')}
-      />
     </View>
   );
 }

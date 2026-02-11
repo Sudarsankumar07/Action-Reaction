@@ -37,6 +37,7 @@ import {
 import hintService from '../services/hintService';
 import { getHighScore } from '../services/highScoreService';
 import TamilKeyboard from '../components/TamilKeyboard';
+import DemoVideoOverlay from '../components/DemoVideoOverlay';
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -75,6 +76,10 @@ export default function GameScreen({ route, navigation }) {
   const [loadingHints, setLoadingHints] = useState(false);
   const [highScore, setHighScore] = useState(0);
 
+  // Demo video state
+  const [showDemoVideo, setShowDemoVideo] = useState(false);
+  const [hasSeenDemo, setHasSeenDemo] = useState(false);
+
   // Use refs to track current scores for navigation
   const scoreRef = useRef(0);
   const passedRef = useRef(0);
@@ -95,6 +100,26 @@ export default function GameScreen({ route, navigation }) {
   const lastAction = useRef(Date.now());
   const sensitivity = 0.7; // Adjusted for flip detection (lower value for z-axis)
   const isProcessing = useRef(false); // Add flag to prevent multiple triggers
+
+  // Check if user has seen demo video (for multiplayer mode)
+  useEffect(() => {
+    async function checkFirstTimeUser() {
+      if (mode === 'multiplayer') {
+        try {
+          const seen = await AsyncStorage.getItem('hasSeenMultiplayerDemo');
+          setHasSeenDemo(seen === 'true');
+          
+          // Auto-show for first-time users
+          if (!seen) {
+            setShowDemoVideo(true);
+          }
+        } catch (error) {
+          console.error('Error checking demo status:', error);
+        }
+      }
+    }
+    checkFirstTimeUser();
+  }, [mode]);
 
   // Load timer setting and high score from AsyncStorage
   useFocusEffect(
@@ -744,6 +769,49 @@ export default function GameScreen({ route, navigation }) {
           <Text style={styles.countdownText}>{countdown}</Text>
           <Text style={styles.countdownLabel}>Get Ready!</Text>
         </View>
+
+        {/* Demo Video Overlay for Multiplayer Mode */}
+        {mode === 'multiplayer' && (
+          <>
+            <DemoVideoOverlay
+              visible={showDemoVideo}
+              onClose={async () => {
+                setShowDemoVideo(false);
+                try {
+                  await AsyncStorage.setItem('hasSeenMultiplayerDemo', 'true');
+                  setHasSeenDemo(true);
+                } catch (error) {
+                  console.error('Error saving demo status:', error);
+                }
+              }}
+              onStartGame={async () => {
+                setShowDemoVideo(false);
+                try {
+                  await AsyncStorage.setItem('hasSeenMultiplayerDemo', 'true');
+                  setHasSeenDemo(true);
+                } catch (error) {
+                  console.error('Error saving demo status:', error);
+                }
+                // Skip countdown and start game immediately
+                setCountdown(0);
+              }}
+              soundEnabled={soundEnabled}
+              maxDuration={3}
+            />
+
+            {/* Optional: "How to Play" button for returning users */}
+            {!showDemoVideo && hasSeenDemo && (
+              <TouchableOpacity
+                style={styles.demoButton}
+                onPress={() => setShowDemoVideo(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="play-circle" size={20} color={colors.white} />
+                <Text style={styles.demoButtonText}>How to Play</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
       </LinearGradient>
     );
   }
@@ -1156,6 +1224,23 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize2xl,
     color: colors.white,
     marginTop: spacing.lg,
+  },
+  demoButton: {
+    position: 'absolute',
+    top: (StatusBar.currentHeight || 0) + spacing.lg,
+    left: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
+  },
+  demoButtonText: {
+    fontSize: typography.fontSizeSm,
+    fontWeight: typography.fontWeightSemibold,
+    color: colors.white,
   },
   endContainer: {
     flex: 1,
